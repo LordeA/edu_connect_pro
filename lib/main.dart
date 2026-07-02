@@ -6,13 +6,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
-import 'firebase_options.dart';
+import 'package:edu_connect_pro/firebase_options.dart';
 import 'providers/auth_provider.dart';
-import 'router.dart';
+import 'app_router.dart'; // Asire w li koresponn ak non fichye router ou a (router.dart)
+import 'providers/course_provider.dart';
 
 void main() async {
+  // 1. Toujou asire w Flutter mare ak sistèm nan anlè a piske n ap inisyalize Firebase
   WidgetsFlutterBinding.ensureInitialized();
-
+  
+  // 2. Inisyalize Firebase parfe anvan aplikasyon an demare
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
@@ -25,11 +28,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Nou mete yon SÈL MultiProvider nan rasin aplikasyon an nèt
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-        // Les Membres B et C ajouteront ici :
-        // ChangeNotifierProvider(create: (_) => CourseProvider()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),   // Pou koneksyon an
+        ChangeNotifierProvider(create: (_) => CourseProvider()), // Pati pa w la (S2)!
+        // Kòlèg yo (Membres B et C) ap ka ajoute ProgressProvider la a aprè:
         // ChangeNotifierProvider(create: (_) => ProgressProvider()),
       ],
       child: const _AppRoot(),

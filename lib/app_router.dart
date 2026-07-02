@@ -10,26 +10,11 @@ import 'providers/auth_provider.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 
-// Écrans temporaires en attendant le travail des Membres B et C
-class TeacherHomeScreen extends StatelessWidget {
-  const TeacherHomeScreen({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Espace Enseignant'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => context.read<AuthProvider>().logout(),
-          ),
-        ],
-      ),
-      body: const Center(child: Text('Bienvenue, Enseignant ✓')),
-    );
-  }
-}
+// NOUVO ENPÒTASYON POU PAJ PWOFESÈ YO
+import 'screens/teacher/teacher_dashboard_screen.dart';
+import 'screens/teacher/add_course_screen.dart';
 
+// Écran temporaire étudiant (en attendant le travail du Membre concerné)
 class StudentHomeScreen extends StatelessWidget {
   const StudentHomeScreen({super.key});
   @override
@@ -65,10 +50,20 @@ GoRouter createRouter(AuthProvider authProvider) {
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
       ),
+
+      // =========================================
+      // NOUVO WOUT POU ESPAS ENSEIGNANT AN
+      // =========================================
       GoRoute(
-        path: '/teacher-home',
-        builder: (context, state) => const TeacherHomeScreen(),
+        path: '/teacher/dashboard', // Nou ranplase '/teacher-home' ak sa
+        builder: (context, state) => const TeacherDashboardScreen(),
       ),
+      GoRoute(
+        path: '/teacher/add-course',
+        builder: (context, state) => const AddCourseScreen(),
+      ),
+
+      // Wout etidyan an rete la
       GoRoute(
         path: '/student-home',
         builder: (context, state) => const StudentHomeScreen(),
@@ -90,20 +85,21 @@ GoRouter createRouter(AuthProvider authProvider) {
 
       // Connecté mais reste sur login/register → redirection vers son espace
       if (isAuth && isLoggingIn) {
-        if (authProvider.isTeacher) return '/teacher-home';
+        if (authProvider.isTeacher) return '/teacher/dashboard'; // Mizajou isit la
         if (authProvider.isStudent) return '/student-home';
         // Rôle pas encore chargé, on attend
         return null;
       }
 
       // Connecté en tant qu'étudiant qui essaie d'accéder à l'espace enseignant
-      if (isAuth && authProvider.isStudent && state.matchedLocation == '/teacher-home') {
+      // NOUVO: startsWith pwoteje TOUT wout ki kòmanse ak /teacher (dashboard + add-course)
+      if (isAuth && authProvider.isStudent && state.matchedLocation.startsWith('/teacher')) {
         return '/student-home';
       }
 
       // Connecté en tant qu'enseignant qui essaie d'accéder à l'espace étudiant
       if (isAuth && authProvider.isTeacher && state.matchedLocation == '/student-home') {
-        return '/teacher-home';
+        return '/teacher/dashboard'; // Mizajou isit la
       }
 
       return null; // Pas de redirection nécessaire
