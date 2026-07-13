@@ -1,12 +1,7 @@
-// ============================================================
-// EduConnect Pro — Écran de connexion
-// Membre A — lib/screens/auth/login_screen.dart
-// ============================================================
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
-import '../../providers/auth_provider.dart';
+import 'register_screen.dart';
+import 'package:edu_connect_pro/app_router.dart';
+import '../dashboard/student_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,136 +11,161 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
-
-    if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? 'Erreur de connexion')),
-      );
-    }
-    // Si succès, le routeur (GoRouter) redirige automatiquement
-    // grâce au listener sur AuthProvider — voir router.dart
-  }
+  bool _obscureText = true;
+  bool _rememberMe = false;
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Icon(Icons.school, size: 64, color: Colors.blue),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'EduConnect Pro',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Connectez-vous à votre compte',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Champ Email
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer votre email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Email invalide';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Champ Mot de passe
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      labelText: 'Mot de passe',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      border: const OutlineInputBorder(),
-                      suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined),
-                        onPressed: () {
-                          setState(() => _obscurePassword = !_obscurePassword);
-                        },
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer votre mot de passe';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Bouton connexion
-                  FilledButton(
-                    onPressed: authProvider.isLoading ? null : _handleLogin,
-                    style: FilledButton.styleFrom(padding: const EdgeInsets.all(16)),
-                    child: authProvider.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Text('Se connecter'),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Lien vers inscription
-                  TextButton(
-                    onPressed: () => context.push('/register'),
-                    child: const Text('Pas encore de compte ? S\'inscrire'),
-                  ),
-                ],
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 40),
+            const Center(
+              child: Text(
+                'Bienvenue !',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
             ),
-          ),
+            const SizedBox(height: 8),
+            const Center(
+              child: Text(
+                'Connectez-vous à votre compte',
+                style: TextStyle(color: Colors.grey, fontSize: 16),
+              ),
+            ),
+            const SizedBox(height: 40),
+
+            // Champ Email
+            const Text('Email ou Téléphone', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.grey[100],
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Champ Mot de passe
+            const Text('Mot de passe', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _passwordController,
+              obscureText: _obscureText,
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.grey[100],
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility),
+                  onPressed: () => setState(() => _obscureText = !_obscureText),
+                ),
+              ),
+            ),
+            const SizedBox(height: 15),
+
+            // Se souvenir de moi & Oublié
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _rememberMe,
+                      onChanged: (value) => setState(() => _rememberMe = value!),
+                    ),
+                    const Text('Se souvenir de moi'),
+                  ],
+                ),
+                TextButton(
+                  onPressed: () {},
+                  child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.grey)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Bouton Se Connecter
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: () {
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => const StudentDashboard()),
+  );
+},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0D47A1),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('Se connecter', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            // "Ou continuer avec"
+            const Row(
+              children: [
+                Expanded(child: Divider()),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  child: Text('ou continuer avec', style: TextStyle(color: Colors.grey)),
+                ),
+                Expanded(child: Divider()),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Boutons Rezo Sosyo yo
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _socialButton(Icons.g_mobiledata, Colors.red, () {}),
+                _socialButton(Icons.facebook, Colors.blue, () {}),
+                _socialButton(Icons.apple, Colors.black, () {}),
+              ],
+            ),
+            const SizedBox(height: 40),
+
+            // Lyen pou kreye kont
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Pas encore de compte ? "),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterScreen()));
+                  },
+                  child: const Text("Créer un compte", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _socialButton(IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, size: 32, color: color),
       ),
     );
   }

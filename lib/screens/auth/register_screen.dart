@@ -1,12 +1,4 @@
-// ============================================================
-// EduConnect Pro — Écran d'inscription
-// Membre A — lib/screens/auth/register_screen.dart
-// ============================================================
-
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
-import '../../providers/auth_provider.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -16,221 +8,129 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _nomController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _institutionController = TextEditingController();
-
-  String _selectedRole = 'student'; // rôle par défaut
-  bool _obscurePassword = true;
-
-  @override
-  void dispose() {
-    _nomController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _institutionController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleRegister() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.register(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-      nom: _nomController.text.trim(),
-      role: _selectedRole,
-      institution: _institutionController.text.trim(),
-    );
-
-    if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? 'Erreur d\'inscription')),
-      );
-    }
-    // Si succès, GoRouter redirige automatiquement selon le rôle
-  }
+  String _selectedRole = 'Étudiant'; // Default ròl nan makèt la
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Créer un compte')),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Center(
+              child: Text(
+                'Créer un Compte',
+                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 5),
+            const Center(
+              child: Text(
+                'Rejoigner EduConnect Pro',
+                style: TextStyle(color: Colors.grey, fontSize: 16),
+              ),
+            ),
+            const SizedBox(height: 30),
+
+            // Prenom ak Nom sou menm liy
+            Row(
               children: [
-                // Sélection du rôle — étudiant ou enseignant
-                const Text(
-                  'Je suis :',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _RoleCard(
-                        label: 'Étudiant',
-                        icon: Icons.school_outlined,
-                        selected: _selectedRole == 'student',
-                        onTap: () => setState(() => _selectedRole = 'student'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _RoleCard(
-                        label: 'Enseignant',
-                        icon: Icons.person_outline,
-                        selected: _selectedRole == 'teacher',
-                        onTap: () => setState(() => _selectedRole = 'teacher'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
+                Expanded(child: _buildTextField('Prénom')),
+                const SizedBox(width: 15),
+                Expanded(child: _buildTextField('Nom')),
+              ],
+            ),
+            const SizedBox(height: 15),
+            _buildTextField('Email'),
+            const SizedBox(height: 15),
+            _buildTextField('Téléphone'),
+            const SizedBox(height: 15),
+            _buildTextField('Mot de passe', obscure: true),
+            const SizedBox(height: 15),
+            _buildTextField('Confirmer le mot de passe', obscure: true),
+            const SizedBox(height: 20),
 
-                // Nom complet
-                TextFormField(
-                  controller: _nomController,
-                  decoration: const InputDecoration(
-                    labelText: 'Nom complet',
-                    prefixIcon: Icon(Icons.badge_outlined),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      (value == null || value.isEmpty) ? 'Champ requis' : null,
-                ),
-                const SizedBox(height: 16),
+            // Seksyon Chwa Ròl la (Je suis:)
+            const Text('Je suis:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(child: _roleCard('Étudiant', Icons.school)),
+                const SizedBox(width: 15),
+                Expanded(child: _roleCard('Enseignant', Icons.person)),
+              ],
+            ),
+            const SizedBox(height: 30),
 
-                // Institution
-                TextFormField(
-                  controller: _institutionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Institution (ex: ITAC)',
-                    prefixIcon: Icon(Icons.apartment_outlined),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      (value == null || value.isEmpty) ? 'Champ requis' : null,
+            // Bouton S'inscrire
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0D47A1),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                const SizedBox(height: 16),
+                child: const Text("S'inscrire", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ),
+            const SizedBox(height: 20),
 
-                // Email
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email_outlined),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Champ requis';
-                    if (!value.contains('@')) return 'Email invalide';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Mot de passe
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Mot de passe',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined),
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) return 'Champ requis';
-                    if (value.length < 6) return 'Minimum 6 caractères';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                FilledButton(
-                  onPressed: authProvider.isLoading ? null : _handleRegister,
-                  style: FilledButton.styleFrom(padding: const EdgeInsets.all(16)),
-                  child: authProvider.isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                        )
-                      : const Text('Créer mon compte'),
-                ),
-                const SizedBox(height: 16),
-
-                TextButton(
-                  onPressed: () => context.pop(),
-                  child: const Text('Déjà un compte ? Se connecter'),
+            // Lyen pou tounen nan Connexion
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Déjà un compte ? "),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: const Text("Se connecter", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
   }
-}
 
-// Carte de sélection de rôle (réutilisable)
-class _RoleCard extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _RoleCard({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        decoration: BoxDecoration(
-          color: selected ? Colors.blue.shade50 : Colors.transparent,
-          border: Border.all(
-            color: selected ? Colors.blue : Colors.grey.shade300,
-            width: selected ? 2 : 1,
+  Widget _buildTextField(String label, {bool obscure = false}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 6),
+        TextField(
+          obscureText: obscure,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.grey[100],
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _roleCard(String role, IconData icon) {
+    bool isSelected = _selectedRole == role;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedRole = role),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.grey[100],
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isSelected ? Colors.blue : Colors.transparent, width: 2),
         ),
         child: Column(
           children: [
-            Icon(icon, size: 32, color: selected ? Colors.blue : Colors.grey.shade600),
+            Icon(icon, color: isSelected ? Colors.blue : Colors.grey, size: 30),
             const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                color: selected ? Colors.blue : Colors.grey.shade700,
-              ),
-            ),
+            Text(role, style: TextStyle(fontWeight: FontWeight.bold, color: isSelected ? Colors.blue : Colors.black87)),
           ],
         ),
       ),

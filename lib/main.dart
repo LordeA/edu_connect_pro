@@ -8,8 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_connect_pro/firebase_options.dart';
 import 'providers/auth_provider.dart';
-import 'app_router.dart'; // Asire w li koresponn ak non fichye router ou a (router.dart)
-import 'providers/course_provider.dart';
+import 'package:edu_connect_pro/app_router.dart';import 'providers/course_provider.dart';
 
 void main() async {
   // 1. Toujou asire w Flutter mare ak sistèm nan anlè a piske n ap inisyalize Firebase
@@ -47,18 +46,22 @@ class _AppRoot extends StatelessWidget {
   const _AppRoot();
 
   @override
+  @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-    final router = createRouter(authProvider);
+    // Si w bezwen gade si moun nan konekte ak authProvider la, ou ka kite liy sa a
+    // final authProvider = context.watch<AuthProvider>();
 
-    return MaterialApp.router(
+    return MaterialApp(
       title: 'EduConnect Pro',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0D47A1)),
         useMaterial3: true,
       ),
-      routerConfig: router,
+      // Nou itilize wout premye paj la (Splash Screen) kòm premye wout
+      initialRoute: AppRouter.splash,
+      // Nou pase sistèm generateRoute nou te kreye a la
+      onGenerateRoute: AppRouter.generateRoute,
     );
   }
-}
+  }
