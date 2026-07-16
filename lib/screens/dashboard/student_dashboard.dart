@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import '../courses/course_catalog_screen.dart';
-import '../courses/course_detail_screen.dart'; // Enpòtasyon pou detay kou yo ka mache
-import '../forum/forum_screen.dart';
-import '../notifications/notifications_screen.dart';
-import '../profile/profile_screen.dart';
+// ISIT LA: Nou mete chemen konplè yo ak non pwojè w la (nou pran "cli_firebase" kòm egzanp)
+import 'package:edu_connect_pro/screens/courses/course_catalog_screen.dart';
+import 'package:edu_connect_pro/screens/courses/course_detail_screen.dart'; 
+import 'package:edu_connect_pro/screens/forum/forum_screen.dart';
+import 'package:edu_connect_pro/screens/notifications/notifications_screen.dart';
+import 'package:edu_connect_pro/screens/profile/profile_screen.dart';
 
 class StudentDashboard extends StatefulWidget {
   const StudentDashboard({super.key});
@@ -15,7 +16,6 @@ class StudentDashboard extends StatefulWidget {
 class _StudentDashboardState extends State<StudentDashboard> {
   int _currentIndex = 0;
 
-  // Lis tout paj onglet yo pral louvri
   final List<Widget> _pages = [
     const AccueilBody(), 
     const CourseCatalogScreen(),
@@ -33,7 +33,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
-            _currentIndex = index; // Chanje paj lè w klike sou onglet yo
+            _currentIndex = index; 
           });
         },
         type: BottomNavigationBarType.fixed,
@@ -51,7 +51,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
   }
 }
 
-// Men kòd reyèl Accueil la ki gen tout bouton ak kat yo konekte kounye a
 class AccueilBody extends StatelessWidget {
   const AccueilBody({super.key});
 
@@ -63,112 +62,124 @@ class AccueilBody extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Entête pwofil la
+            // 1. Entête: Bonjour, Jean Berlineda ak foto pwofil gòch / notifikasyon dwat
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
                     const CircleAvatar(
-                      radius: 25,
+                      radius: 22,
                       backgroundColor: Colors.amber,
-                      child: Icon(Icons.person, color: Colors.white, size: 30),
+                      child: Icon(Icons.person, color: Colors.white, size: 26),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Bonjour,', style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-                        const Text('Jean Berlineda', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text('Bonjour,', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                        const Text('Jean Berlineda', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ],
                 ),
-                const Icon(Icons.notifications_none, size: 28),
+                const Icon(Icons.notifications_none, size: 26),
               ],
             ),
-            const SizedBox(height: 25),
+            const SizedBox(height: 20),
 
-            // 2. Kat Pwogresyon Globale (97%)
+            // 2. Kat Progression Globale: "Progression globale" anlè, epi ti wonn nan bò gòch "Continue comme ça !"
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ],
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Stack(
-                    alignment: Alignment.center,
+                  Text('Progression globale', style: TextStyle(color: Colors.grey[800], fontSize: 13, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 12),
+                  Row(
                     children: [
-                      const SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: CircularProgressIndicator(
-                          value: 0.97,
-                          strokeWidth: 5,
-                          backgroundColor: Color(0xFFE0E0E0),
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-                        ),
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          const SizedBox(
+                            width: 45,
+                            height: 45,
+                            child: CircularProgressIndicator(
+                              value: 0.97,
+                              strokeWidth: 4.5,
+                              backgroundColor: Color(0xFFE8F5E9),
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                            ),
+                          ),
+                          Text('97%', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[900], fontSize: 11)),
+                        ],
                       ),
-                      Text('97%', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[800], fontSize: 12)),
-                    ],
-                  ),
-                  const SizedBox(width: 20),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Progression globale', style: TextStyle(color: Colors.grey, fontSize: 13)),
-                      const SizedBox(height: 4),
-                      Text('Continue comme ça !', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.grey[800])),
+                      const SizedBox(width: 15),
+                      Text('Continue comme ça !', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.grey[800])),
                     ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 25),
 
-            // 3. Seksyon Mes cours ak bouton "Voir tout" ki mache kounye a
+            // 3. Seksyon Mes cours
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Mes cours', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text('Mes cours', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 TextButton(
                   onPressed: () {
-                    // Sa ap voye w sou paj Catalogue la lè w klike sou "Voir tout"
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const CourseCatalogScreen()),
                     );
                   }, 
-                  child: const Text('Voir tout'),
+                  child: const Text('Voir tout', style: TextStyle(fontSize: 13, color: Colors.blue)),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             
-            // Kats kou yo ki konekte ak detay yo kounye a
-            _buildCourseItem(context, 'Flutter & Dart', 'Avancé', 0.78, Colors.blue),
-            _buildCourseItem(context, 'UI/UX Design', 'Intermédiaire', 0.45, Colors.purple),
-            const SizedBox(height: 25),
+            _buildCourseItem(context, 'Flutter & Dart', 'Avancé', '4.8', 0.78, Colors.blue, false),
+            _buildCourseItem(context, 'UI/UX Design', 'Intermédiaire', '4.7', 0.45, Colors.purple, true),
+            const SizedBox(height: 20),
 
-            // 4. Badges obtenus
+            // 4. Seksyon Badges obtenus
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Badges obtenus', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                TextButton(onPressed: () {}, child: const Text('Voir tout')),
+                const Text('Badges obtenus', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                    );
+                  }, 
+                  child: const Text('Voir tout', style: TextStyle(fontSize: 13, color: Colors.blue)),
+                ),
               ],
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildBadge(Icons.star, Colors.amber),
-                _buildBadge(Icons.emoji_events, Colors.indigo),
-                _buildBadge(Icons.local_fire_department, Colors.orange),
-                _buildBadge(Icons.lock, Colors.grey),
+                _buildTrophyBadge(), 
+                _buildStarBadge(),   
+                _buildStarBadge(),   
+                _buildStarBadge(),   
               ],
             ),
           ],
@@ -177,60 +188,86 @@ class AccueilBody extends StatelessWidget {
     );
   }
 
-  Widget _buildCourseItem(BuildContext context, String title, String level, double progress, Color color) {
+  Widget _buildCourseItem(BuildContext context, String title, String level, String rating, double progress, Color color, bool showRating) {
     return GestureDetector(
       onTap: () {
-        // Sa ap ouvè detay kou a parfe lè w klike sou kat la!
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => CourseDetailScreen(courseTitle: title)),
         );
       },
       child: Container(
-        margin: const EdgeInsets.only(bottom: 15),
-        padding: const EdgeInsets.all(14),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 5)],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            )
+          ],
         ),
         child: Row(
           children: [
             Container(
-              width: 50,
-              height: 50,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-              child: Icon(Icons.book, color: color),
+              child: Icon(Icons.menu_book, color: color, size: 22),
             ),
-            const SizedBox(width: 15),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                  Text(level, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                  const SizedBox(height: 8),
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(level, style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                  if (showRating) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 12),
+                        const SizedBox(width: 4),
+                        Text(rating, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.black54)),
+                      ],
+                    ),
+                  ],
+                  const SizedBox(height: 6),
                   LinearProgressIndicator(
                     value: progress,
                     backgroundColor: Colors.grey[200],
                     valueColor: AlwaysStoppedAnimation<Color>(color),
+                    minHeight: 4,
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 10),
-            Text('${(progress * 100).toInt()}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-          ],
+Text('${(progress * 100).toInt()}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.black87)),          ],
         ),
       ),
     );
   }
 
-  Widget _buildBadge(IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-      child: Icon(icon, color: color, size: 28),
+  Widget _buildTrophyBadge() {
+    return const Icon(
+      Icons.emoji_events, 
+      color: Colors.amber, 
+      size: 40,
+    );
+  }
+
+  Widget _buildStarBadge() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        const Icon(Icons.star, color: Colors.amber, size: 42),
+        Icon(Icons.star, color: Colors.blue[900], size: 32),
+        const Icon(Icons.star, color: Colors.orange, size: 12),
+      ],
     );
   }
 }
