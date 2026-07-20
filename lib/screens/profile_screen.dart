@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+// Enpòte paj ou yo isit la:
+import 'package:edu_connect_pro/screens/modifier_profil_screen.dart';
+import 'package:edu_connect_pro/screens/certificats_screen.dart';
+import 'package:edu_connect_pro/screens/activites_screen.dart';
+import 'package:edu_connect_pro/screens/aide_support_screen.dart';
+import 'package:edu_connect_pro/screens/parametres_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   final String userId;
@@ -14,10 +20,10 @@ class ProfileScreen extends StatelessWidget {
           color: Colors.blue,
         ),
         
-        // 2. Kontni ki parèt anlè (Foto + Lis)
+        // 2. Kontni ki parèt anlè
         Column(
           children: [
-            const SizedBox(height: 100), // Espas pou foto a
+            const SizedBox(height: 100),
             // Foto Profil
             const CircleAvatar(
               radius: 60,
@@ -50,11 +56,22 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 30),
                     
-                    // Opsyon yo
-                    _buildMenuOption(Icons.person_outline, "Modifier le profil"),
-                    _buildMenuOption(Icons.badge_outlined, "Mes Certificats"),
-                    _buildMenuOption(Icons.settings_outlined, "Mes activités"),
-                    _buildMenuOption(Icons.help_outline, "Aide & Support"),
+                    // Opsyon yo ak navigasyon
+                    _buildMenuOption(context, Icons.person_outline, "Modifier le profil", () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ModifierProfilScreen()));
+                    }),
+                    _buildMenuOption(context, Icons.badge_outlined, "Mes Certificats", () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const CertificatesScreen()));
+                    }),
+                    _buildMenuOption(context, Icons.settings_outlined, "Mes activités", () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ActivitesScreen()));
+                    }),
+                    _buildMenuOption(context, Icons.help_outline, "Aide & Support", () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const AideSupportScreen()));
+                    }),
+                    _buildMenuOption(context, Icons.help_outline, "Parametres", () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const ParametresScreen()));
+                    }),
                   ],
                 ),
               ),
@@ -72,12 +89,12 @@ class ProfileScreen extends StatelessWidget {
     ]);
   }
 
-  Widget _buildMenuOption(IconData icon, String title) {
+  Widget _buildMenuOption(BuildContext context, IconData icon, String title, VoidCallback onTap) {
     return ListTile(
       leading: Icon(icon, color: Colors.black87),
       title: Text(title),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: () {},
+      onTap: onTap, // Isit la nou itilize fonksyon nou pase a
     );
   }
 }

@@ -24,7 +24,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     const CourseCatalogScreen(),
     const ForumScreen(),
     const NotificationScreen(),
-          ProfileScreen(userId: 'ID_ELÈV_LA'),  ];
+    const ProfileScreen(userId: 'ID_ELÈV_LA'),  ];
 
   @override
   Widget build(BuildContext context) {
