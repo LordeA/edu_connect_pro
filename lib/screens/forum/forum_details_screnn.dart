@@ -1,212 +1,8 @@
 import 'package:flutter/material.dart';
 
-// =========================================================================
-// 1. PAJ PRENSIPAL FOWÒM NAN (ForumScreen)
-// =========================================================================
-class ForumScreen extends StatefulWidget {
-  const ForumScreen({super.key});
-
-  @override
-  State<ForumScreen> createState() => _ForumScreenState();
-}
-
-class _ForumScreenState extends State<ForumScreen> {
-  bool _showMyQuestionsOnly = false;
-
-  final List<Map<String, dynamic>> _questions = [
-    {
-      'title': 'Comment gérer l\'état avec Provider ?',
-      'author': 'Moïse Rebecca',
-      'time': 'Il y a 2h',
-      'replies': 6,
-      'isMine': false,
-    },
-    {
-      'title': 'Problème avec l\'animation',
-      'author': 'Jean-Berry',
-      'time': 'Il y a 5h',
-      'replies': 3,
-      'isMine': true,
-    },
-    {
-      'title': 'Meilleure architecture pour un projet Flutter',
-      'author': 'Joseph Milouse',
-      'time': 'Il y a 1 jour',
-      'replies': 7,
-      'isMine': false,
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final filteredQuestions = _showMyQuestionsOnly
-        ? _questions.where((q) => q['isMine'] == true).toList()
-        : _questions;
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text(
-          'Forum - Flutter & Dart',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _showMyQuestionsOnly = false;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: !_showMyQuestionsOnly ? const Color(0xFF0D47A1) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFF0D47A1)),
-                    ),
-                    child: Text(
-                      'Discussions',
-                      style: TextStyle(
-                        color: !_showMyQuestionsOnly ? Colors.white : const Color(0xFF0D47A1),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _showMyQuestionsOnly = true;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: _showMyQuestionsOnly ? const Color(0xFF0D47A1) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.grey),
-                    ),
-                    child: Text(
-                      'Mes questions',
-                      style: TextStyle(
-                        color: _showMyQuestionsOnly ? Colors.white : Colors.black87,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: filteredQuestions.isEmpty
-                ? const Center(child: Text('Aucune question trouvée.'))
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: filteredQuestions.length,
-                    itemBuilder: (context, index) {
-                      final q = filteredQuestions[index];
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ForumDetailsScreen(question: q),
-                            ),
-                          );
-                        },
-                        child: Card(
-                          color: Colors.white,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 0.5,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                              children: [
-                                const CircleAvatar(
-                                  backgroundColor: Colors.grey,
-                                  child: Icon(Icons.person, color: Colors.white),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        q['title'],
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${q['author']} - ${q['time']}',
-                                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF0D47A1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    '${q['replies']}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF0D47A1),
-        onPressed: () async {
-          final newQuestion = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AskQuestionScreen()),
-          );
-
-          if (newQuestion != null && mounted) {
-            setState(() {
-              _questions.insert(0, newQuestion);
-            });
-          }
-        },
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      ),
-    );
-  }
-}
-
-// =========================================================================
-// 2. PAJ DETAY KESYON AK REPONS YO (ForumDetailsScreen)
-// =========================================================================
+// ==========================================
+// 1. PAJ DETAY KESYON AK REPONS YO
+// ==========================================
 class ForumDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> question;
 
@@ -219,6 +15,7 @@ class ForumDetailsScreen extends StatefulWidget {
 class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
   final TextEditingController _replyController = TextEditingController();
   
+  // Kèk egzanp repons tanporè pou ranpli paj la
   final List<Map<String, String>> _replies = [
     {
       'author': 'Jean-Pierre',
@@ -228,7 +25,7 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
     {
       'author': 'Marie Lucie',
       'time': 'Il y a 30 min',
-      'content': 'Ou ka tcheke dokiman ofisyèl Flutter a som Provider tou, li bay bèl egzanp senp.'
+      'content': 'Ou ka tcheke dokiman ofisyèl Flutter a sou Provider tou, li bay bèl egzanp senp.'
     }
   ];
 
@@ -263,6 +60,7 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Kesyon an li menm
                   Card(
                     color: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -281,7 +79,7 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
                               const SizedBox(width: 12),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
+                                children: [
                                   Text(
                                     widget.question['author'] ?? 'Anonyme',
                                     style: const TextStyle(fontWeight: FontWeight.bold),
@@ -314,6 +112,7 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
+                  // Lis repons yo
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -355,6 +154,7 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
               ),
             ),
           ),
+          // Jaden pou ekri yon nouvo repons anba nèt
           Container(
             padding: const EdgeInsets.all(12),
             decoration: const BoxDecoration(
@@ -389,9 +189,9 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
   }
 }
 
-// =========================================================================
-// 3. PAJ POU POZE YON NOUVO KESYON (AskQuestionScreen)
-// =========================================================================
+// ==========================================
+// 2. PAJ POU POZE YON NOUVO KESYON
+// ==========================================
 class AskQuestionScreen extends StatefulWidget {
   const AskQuestionScreen({super.key});
 
@@ -405,6 +205,7 @@ class _AskQuestionScreenState extends State<AskQuestionScreen> {
 
   void _submit() {
     if (_titleController.text.trim().isNotEmpty) {
+      // Nou retounen nouvo kesyon an bay paj fowòm nan
       Navigator.pop(context, {
         'title': _titleController.text.trim(),
         'author': 'Moi',

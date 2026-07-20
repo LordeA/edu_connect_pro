@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-// ISIT LA: Nou mete chemen konplè yo ak non pwojè w la (nou pran "cli_firebase" kòm egzanp)
+// ISIT LA: Nou mete chemen konplè yo ak non pwojè w la
 import 'package:edu_connect_pro/screens/courses/course_catalog_screen.dart';
 import 'package:edu_connect_pro/screens/courses/course_detail_screen.dart'; 
 import 'package:edu_connect_pro/screens/forum/forum_screen.dart';
 import 'package:edu_connect_pro/screens/notifications/notifications_screen.dart';
-import 'package:edu_connect_pro/screens/profile/profile_screen.dart';
+import 'package:edu_connect_pro/screens/dashboard/student_dashboard.dart';
+import 'package:edu_connect_pro/screens/badges_list_screen.dart';
+import 'package:edu_connect_pro/screens/profile_screen.dart'; // Ajoute sa a
 
 class StudentDashboard extends StatefulWidget {
-  const StudentDashboard({super.key});
+  final String userId; // Nou bezwen ID a jan nou te diskite anvan an
+  const StudentDashboard({super.key, required this.userId});
 
   @override
   State<StudentDashboard> createState() => _StudentDashboardState();
@@ -20,9 +23,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
     const AccueilBody(), 
     const CourseCatalogScreen(),
     const ForumScreen(),
-    const NotificationsScreen(),
-    const ProfileScreen(),
-  ];
+    const NotificationScreen(),
+          ProfileScreen(userId: 'ID_ELÈV_LA'),  ];
 
   @override
   Widget build(BuildContext context) {
@@ -156,7 +158,7 @@ class AccueilBody extends StatelessWidget {
             _buildCourseItem(context, 'UI/UX Design', 'Intermédiaire', '4.7', 0.45, Colors.purple, true),
             const SizedBox(height: 20),
 
-            // 4. Seksyon Badges obtenus
+            // 4. Seksyon Badges obtenus (Nou modifye kòd la isit la pou louvri BadgesListScreen)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -165,10 +167,17 @@ class AccueilBody extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                      MaterialPageRoute(builder: (context) => const BadgesListScreen()),
                     );
                   }, 
-                  child: const Text('Voir tout', style: TextStyle(fontSize: 13, color: Colors.blue)),
+                  child: const Text(
+                    'Voir tout', 
+                    style: TextStyle(
+                      fontSize: 13, 
+                      color: Color(0xFF0D47A1), 
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -246,7 +255,8 @@ class AccueilBody extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-Text('${(progress * 100).toInt()}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.black87)),          ],
+            Text('${(progress * 100).toInt()}%', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Colors.black87)),
+          ],
         ),
       ),
     );
