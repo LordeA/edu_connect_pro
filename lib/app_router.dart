@@ -25,7 +25,8 @@ class AppRouter {
       case teacherDashboard:
         return MaterialPageRoute(builder: (_) => const TeacherDashboard());
       case studentDashboard:
-        return MaterialPageRoute(builder: (_) => const StudentDashboard());
+        return MaterialPageRoute(builder: (_) =>const StudentDashboard(userId: 'ID_ELÈV_LA', // Ranplase ak ID itilizatè aktyèl la si sa nesesè
+        ));
       case progression:
         return MaterialPageRoute(builder: (_) => const BadgesScreen());
       default:
