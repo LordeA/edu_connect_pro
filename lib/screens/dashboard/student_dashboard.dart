@@ -22,9 +22,10 @@ class _StudentDashboardState extends State<StudentDashboard> {
   final List<Widget> _pages = [
     const AccueilBody(), 
     const CourseCatalogScreen(),
-    const ForumScreen(),
+    ForumScreen(),
     const NotificationScreen(),
-          ProfileScreen(userId: 'ID_ELÈV_LA'),  ];
+    const ProfileScreen(),  
+    ];
 
   @override
   Widget build(BuildContext context) {

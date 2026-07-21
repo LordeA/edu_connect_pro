@@ -17,6 +17,35 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _rememberMe = false;
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  void _handleLogin() {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    // Verifye si tout chan yo ranpli
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Veuillez remplir tous les champs avant de vous connecter !'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Si tou an règ, pase nan dashboard la
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const StudentDashboard(userId: 'ID_ELÈV_LA')),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -98,12 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
               width: double.infinity,
               height: 55,
               child: ElevatedButton(
-                onPressed: () {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => StudentDashboard(userId: 'ID_ELÈV_LA')),
-  );
-},
+                onPressed: _handleLogin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF0D47A1),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

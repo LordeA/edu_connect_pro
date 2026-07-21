@@ -8,129 +8,378 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  String _selectedRole = 'Étudiant'; // Default ròl nan makèt la
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  
+  // Pou jere ki wòl ki chwazi a (Étudiant ou Enseignant)
+  String _selectedRole = 'Étudiant';
+
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _prenomController = TextEditingController();
+  final TextEditingController _nomController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _prenomController.dispose();
+    _nomController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Center(
-              child: Text(
-                'Créer un Compte',
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 5),
-            const Center(
-              child: Text(
-                'Rejoigner EduConnect Pro',
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-            ),
-            const SizedBox(height: 30),
-
-            // Prenom ak Nom sou menm liy
-            Row(
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: _buildTextField('Prénom')),
-                const SizedBox(width: 15),
-                Expanded(child: _buildTextField('Nom')),
-              ],
-            ),
-            const SizedBox(height: 15),
-            _buildTextField('Email'),
-            const SizedBox(height: 15),
-            _buildTextField('Téléphone'),
-            const SizedBox(height: 15),
-            _buildTextField('Mot de passe', obscure: true),
-            const SizedBox(height: 15),
-            _buildTextField('Confirmer le mot de passe', obscure: true),
-            const SizedBox(height: 20),
-
-            // Seksyon Chwa Ròl la (Je suis:)
-            const Text('Je suis:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(child: _roleCard('Étudiant', Icons.school)),
-                const SizedBox(width: 15),
-                Expanded(child: _roleCard('Enseignant', Icons.person)),
-              ],
-            ),
-            const SizedBox(height: 30),
-
-            // Bouton S'inscrire
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D47A1),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                // Tit ak Sous-tit
+                const Text(
+                  'Créer un Compte',
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-                child: const Text("S'inscrire", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Lyen pou tounen nan Connexion
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text("Déjà un compte ? "),
-                GestureDetector(
-                  onTap: () => Navigator.pop(context),
-                  child: const Text("Se connecter", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                Text(
+                  'Rejoindre EduConnect Pro',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
+                const SizedBox(height: 25),
+
+                // Prénom ak Nom sou menm liy
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildTextField(
+                        controller: _prenomController,
+                        hintText: 'Prénom',
+                        icon: Icons.person_outline,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildTextField(
+                        controller: _nomController,
+                        hintText: 'Nom',
+                        icon: Icons.person_outline,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+
+                // Email
+                _buildTextField(
+                  controller: _emailController,
+                  hintText: 'Email',
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 15),
+
+                // Téléphone
+                _buildTextField(
+                  controller: _phoneController,
+                  hintText: 'Téléphone',
+                  icon: Icons.phone_outlined,
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 15),
+
+                // Mot de passe
+                _buildPasswordField(
+                  controller: _passwordController,
+                  hintText: 'Mot de passe',
+                  obscureText: _obscurePassword,
+                  onToggle: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
+                const SizedBox(height: 15),
+
+                // Confirmer le mot de passe
+                _buildPasswordField(
+                  controller: _confirmPasswordController,
+                  hintText: 'Confirmer le mot de passe',
+                  obscureText: _obscureConfirmPassword,
+                  onToggle: () {
+                    setState(() {
+                      _obscureConfirmPassword = !_obscureConfirmPassword;
+                    });
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                // Etiket "Je suis:"
+                const Text(
+                  'Je suis:',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 10),
+
+                // Bouton Chwa Wòl (Étudiant / Enseignant)
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildRoleCard(
+                        title: 'Étudiant',
+                        icon: Icons.person,
+                        iconColor: Colors.green,
+                        isSelected: _selectedRole == 'Étudiant',
+                        onTap: () {
+                          setState(() {
+                            _selectedRole = 'Étudiant';
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 15),
+                    Expanded(
+                      child: _buildRoleCard(
+                        title: 'Enseignant',
+                        icon: Icons.person,
+                        iconColor: const Color(0xFF0D47A1),
+                        isSelected: _selectedRole == 'Enseignant',
+                        onTap: () {
+                          setState(() {
+                            _selectedRole = 'Enseignant';
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+
+                // Bouton S'inscrire
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        // Lojik pou anrejistre itilizatè a
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0D47A1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 2,
+                    ),
+                    child: const Text(
+                      'S\'inscrire',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Lyen pou retounen sou paj koneksyon an
+                Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'Déjà un compte ? ',
+                        style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                        children: const [
+                          TextSpan(
+                            text: 'Se connecter',
+                            style: TextStyle(
+                              color: Color(0xFF0D47A1),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildTextField(String label, {bool obscure = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 6),
-        TextField(
-          obscureText: obscure,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.grey[100],
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+  // Ti fonksyon pou kreye chan tèks yo fasil
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+          prefixIcon: Icon(icon, color: Colors.grey[500], size: 20),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         ),
-      ],
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Chan sa a obligatwa';
+          }
+          return null;
+        },
+      ),
     );
   }
 
-  Widget _roleCard(String role, IconData icon) {
-    bool isSelected = _selectedRole == role;
+  // Ti fonksyon pou chan modpas yo ki gen ikon pou kache/montre tèks la
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required String hintText,
+    required bool obscureText,
+    required VoidCallback onToggle,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: TextFormField(
+        controller: controller,
+        obscureText: obscureText,
+        decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+          prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[500], size: 20),
+          suffixIcon: IconButton(
+            icon: Icon(
+              obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              color: Colors.grey[500],
+              size: 20,
+            ),
+            onPressed: onToggle,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        ),
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Chan sa a obligatwa';
+          }
+          return null;
+        },
+      ),
+    );
+  }
+
+  // Ti fonksyon pou kat chwa wòl (Étudiant / Enseignant)
+  Widget _buildRoleCard({
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
-      onTap: () => setState(() => _selectedRole = role),
+      onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blue.withOpacity(0.1) : Colors.grey[100],
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? Colors.blue : Colors.transparent, width: 2),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF0D47A1) : Colors.grey.shade200,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Icon(icon, color: isSelected ? Colors.blue : Colors.grey, size: 30),
-            const SizedBox(height: 8),
-            Text(role, style: TextStyle(fontWeight: FontWeight.bold, color: isSelected ? Colors.blue : Colors.black87)),
+            Icon(icon, color: iconColor, size: 24),
+            const SizedBox(height: 6),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? const Color(0xFF0D47A1) : Colors.black87,
+              ),
+            ),
           ],
         ),
       ),

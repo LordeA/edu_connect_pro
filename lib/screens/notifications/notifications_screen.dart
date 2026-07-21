@@ -62,7 +62,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       iconColor: Colors.white,
                       bgColor: Colors.blue,
                       title: 'Nouveau cours disponible',
-                      subtitle: 'Design system UI/UX',
+                      subtitle: 'Cisco Routing',
                       time: 'Il y a 1h',
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CourseCatalogScreen())),
                     ),
@@ -102,7 +102,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
       builder: (context) => AlertDialog(
         title: const Text('Nouvelle Publication'),
         content: const TextField(
-          decoration: InputDecoration(hintText: 'Kisa ou ta renmen pataje nan Forum lan?'),
+          decoration: InputDecoration(hintText: 'Qu est-ce que vous voulez partager dans le forum?'),
           maxLines: 3,
         ),
         actions: [
@@ -111,7 +111,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             onPressed: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Post ou a pibliye avèk siksè !')),
+                const SnackBar(content: Text('Post publié avec succès !')),
               );
             },
             child: const Text('Publier'),

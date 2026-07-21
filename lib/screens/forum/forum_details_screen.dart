@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 
-// ==========================================
-// 1. PAJ DETAY KESYON AK REPONS YO
-// ==========================================
 class ForumDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> question;
 
@@ -15,26 +12,24 @@ class ForumDetailsScreen extends StatefulWidget {
 class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
   final TextEditingController _replyController = TextEditingController();
   
-  // Kèk egzanp repons tanporè pou ranpli paj la
   final List<Map<String, String>> _replies = [
     {
       'author': 'Jean-Pierre',
       'time': 'Il y a 1h',
       'content': 'Mwen te gen menm pwoblèm nan tou. Mwen te rezoud li lè m te mete yon ChangeNotifierProvider nan tèt pwojè a!'
     },
-    {
-      'author': 'Marie Lucie',
-      'time': 'Il y a 30 min',
-      'content': 'Ou ka tcheke dokiman ofisyèl Flutter a sou Provider tou, li bay bèl egzanp senp.'
-    }
   ];
 
   void _addReply() {
     if (_replyController.text.trim().isNotEmpty) {
+      final DateTime now = DateTime.now();
+      final String formattedTime = 
+          "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+
       setState(() {
         _replies.add({
           'author': 'Moi',
-          'time': 'À l\'instant',
+          'time': formattedTime,
           'content': _replyController.text.trim(),
         });
         _replyController.clear();
@@ -60,7 +55,6 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Kesyon an li menm
                   Card(
                     color: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -72,20 +66,20 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
                         children: [
                           Row(
                             children: [
-                              const CircleAvatar(
-                                backgroundColor: Colors.grey,
-                                child: Icon(Icons.person, color: Colors.white),
+                              CircleAvatar(
+                                backgroundColor: widget.question['avatarColor'] ?? const Color(0xFF0D47A1),
+                                child: const Icon(Icons.person, color: Colors.white),
                               ),
                               const SizedBox(width: 12),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    widget.question['author'] ?? 'Anonyme',
+                                    widget.question['title'] ?? 'Anonyme',
                                     style: const TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                   Text(
-                                    widget.question['time'] ?? '',
+                                    widget.question['author'] ?? '',
                                     style: TextStyle(color: Colors.grey[600], fontSize: 12),
                                   ),
                                 ],
@@ -93,13 +87,8 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
                             ],
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            widget.question['title'] ?? '',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
                           const Text(
-                            'Bonjour à tous, j\'aimerais avoir votre avis sur la meilleure façon de structurer mon code pour ce cas précis. Merci d\'avance pour vos réponses !',
+                            'Detay sou sijè sa a kap diskite nan kominote a...',
                             style: TextStyle(color: Colors.black87, height: 1.4),
                           ),
                         ],
@@ -112,7 +101,6 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
-                  // Lis repons yo
                   ListView.separated(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -154,7 +142,6 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
               ),
             ),
           ),
-          // Jaden pou ekri yon nouvo repons anba nèt
           Container(
             padding: const EdgeInsets.all(12),
             decoration: const BoxDecoration(
@@ -176,7 +163,7 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.send, color: Colors.blue),
+                    icon: const Icon(Icons.send, color: Color(0xFF0D47A1)),
                     onPressed: _addReply,
                   ),
                 ],
@@ -184,83 +171,6 @@ class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ==========================================
-// 2. PAJ POU POZE YON NOUVO KESYON
-// ==========================================
-class AskQuestionScreen extends StatefulWidget {
-  const AskQuestionScreen({super.key});
-
-  @override
-  State<AskQuestionScreen> createState() => _AskQuestionScreenState();
-}
-
-class _AskQuestionScreenState extends State<AskQuestionScreen> {
-  final _titleController = TextEditingController();
-  final _descController = TextEditingController();
-
-  void _submit() {
-    if (_titleController.text.trim().isNotEmpty) {
-      // Nou retounen nouvo kesyon an bay paj fowòm nan
-      Navigator.pop(context, {
-        'title': _titleController.text.trim(),
-        'author': 'Moi',
-        'time': 'À l\'instant',
-        'replies': 0,
-        'isMine': true,
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Poser une question'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Votre question (Titre)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: TextField(
-                controller: _descController,
-                maxLines: null,
-                expands: true,
-                textAlignVertical: TextAlignVertical.top,
-                decoration: const InputDecoration(
-                  labelText: 'Détails de votre problème...',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D47A1)),
-                onPressed: _submit,
-                child: const Text('Publier', style: TextStyle(color: Colors.white, fontSize: 16)),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

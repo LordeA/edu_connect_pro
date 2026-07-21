@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'forum_details_screen.dart';
+import '../courses/course_catalog_screen.dart';
+import '../notifications/notifications_screen.dart';
+import '../profile_screen.dart';
+import '../dashboard/student_dashboard.dart';
 
-// =========================================================================
-// 1. PAJ PRENSIPAL FOWÒM NAN (ForumScreen)
-// =========================================================================
 class ForumScreen extends StatefulWidget {
   const ForumScreen({super.key});
 
@@ -11,95 +13,125 @@ class ForumScreen extends StatefulWidget {
 }
 
 class _ForumScreenState extends State<ForumScreen> {
-  bool _showMyQuestionsOnly = false;
+  int _selectedTab = 0; // 0 pou Discussions, 1 pou Mes questions
+  final int _currentIndex = 2; // Forum se endis 2
 
-  final List<Map<String, dynamic>> _questions = [
+  // Lis ki gen tout diskisyon yo (Nou fè l vin dinamik ak State)
+  final List<Map<String, dynamic>> _discussions = [
     {
-      'title': 'Comment gérer l\'état avec Provider ?',
-      'author': 'Moïse Rebecca',
-      'time': 'Il y a 2h',
-      'replies': 6,
-      'isMine': false,
+      'title': 'Comment gérer l\'état avec Provider?',
+      'author': 'Moise Rebecca - il y a 2h',
+      'count': '6',
+      'avatarColor': Colors.indigo,
     },
     {
       'title': 'Problème avec l\'animation',
-      'author': 'Jean-Berry',
-      'time': 'Il y a 5h',
-      'replies': 3,
-      'isMine': true,
+      'author': 'Jean Bercy - il y a 5h',
+      'count': '3',
+      'avatarColor': Colors.pink,
     },
     {
       'title': 'Meilleure architecture pour un projet Flutter',
-      'author': 'Joseph Milouse',
-      'time': 'Il y a 1 jour',
-      'replies': 7,
-      'isMine': false,
+      'author': 'Joseph Milouse - il y a 1 jour',
+      'count': '7',
+      'avatarColor': Colors.deepPurple,
     },
   ];
 
+  // Fonksyon pou jere navigasyon ba anba a
+  void _onItemTapped(int index) {
+    if (index == _currentIndex) return;
+
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const StudentDashboard(userId: 'VALÈ_ID_LA')),
+      );
+    } else if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const CourseCatalogScreen()),
+      );
+    } else if (index == 3) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const NotificationScreen()),
+      );
+    } else if (index == 4) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const ProfileScreen()),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final filteredQuestions = _showMyQuestionsOnly
-        ? _questions.where((q) => q['isMine'] == true).toList()
-        : _questions;
+    // Si _selectedTab se 1, nou filtre pou nou wè sèlman kesyon itilizatè a (Moi)
+    List<Map<String, dynamic>> displayedDiscussions = _selectedTab == 0
+        ? _discussions
+        : _discussions.where((item) => item['author'].toString().contains('Moi')).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF4F6F9),
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text(
           'Forum - Flutter & Dart',
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        centerTitle: false,
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          // Bouton Onglets (Discussions / Mes questions)
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _showMyQuestionsOnly = false;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: !_showMyQuestionsOnly ? const Color(0xFF0D47A1) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFF0D47A1)),
-                    ),
-                    child: Text(
-                      'Discussions',
-                      style: TextStyle(
-                        color: !_showMyQuestionsOnly ? Colors.white : const Color(0xFF0D47A1),
-                        fontWeight: FontWeight.bold,
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _selectedTab = 0),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _selectedTab == 0 ? const Color(0xFF0D47A1) : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Discussions',
+                        style: TextStyle(
+                          color: _selectedTab == 0 ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _showMyQuestionsOnly = true;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: _showMyQuestionsOnly ? const Color(0xFF0D47A1) : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.grey),
-                    ),
-                    child: Text(
-                      'Mes questions',
-                      style: TextStyle(
-                        color: _showMyQuestionsOnly ? Colors.white : Colors.black87,
-                        fontWeight: FontWeight.bold,
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _selectedTab = 1),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: _selectedTab == 1 ? const Color(0xFF0D47A1) : Colors.grey[200],
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Mes questions',
+                        style: TextStyle(
+                          color: _selectedTab == 1 ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -107,75 +139,85 @@ class _ForumScreenState extends State<ForumScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          
+          // Lis Kat yo
           Expanded(
-            child: filteredQuestions.isEmpty
-                ? const Center(child: Text('Aucune question trouvée.'))
+            child: displayedDiscussions.isEmpty
+                ? const Center(
+                    child: Text(
+                      'Ou poko poze okenn kesyon.',
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                  )
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: filteredQuestions.length,
+                    padding: const EdgeInsets.all(16),
+                    itemCount: displayedDiscussions.length,
                     itemBuilder: (context, index) {
-                      final q = filteredQuestions[index];
+                      final item = displayedDiscussions[index];
                       return GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ForumDetailsScreen(question: q),
+                              builder: (context) => ForumDetailsScreen(question: item),
                             ),
                           );
                         },
-                        child: Card(
-                          color: Colors.white,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          elevation: 0.5,
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                              children: [
-                                const CircleAvatar(
-                                  backgroundColor: Colors.grey,
-                                  child: Icon(Icons.person, color: Colors.white),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        q['title'],
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                        ),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 14),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.04),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                radius: 24,
+                                backgroundColor: item['avatarColor'],
+                                child: const Icon(Icons.person, color: Colors.white),
+                              ),
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item['title'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: Colors.black87,
                                       ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${q['author']} - ${q['time']}',
-                                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF0D47A1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Text(
-                                    '${q['replies']}',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
                                     ),
-                                  ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      item['author'],
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(width: 8),
+                              CircleAvatar(
+                                radius: 16,
+                                backgroundColor: const Color(0xFF0D47A1),
+                                child: Text(
+                                  item['count'],
+                                  style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -184,282 +226,67 @@ class _ForumScreenState extends State<ForumScreen> {
           ),
         ],
       ),
+      
+      // Bouton Flotan (+) pou pibliye vre
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF0D47A1),
-        onPressed: () async {
-          final newQuestion = await Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const AskQuestionScreen()),
-          );
+        onPressed: () {
+          final TextEditingController titleController = TextEditingController();
 
-          if (newQuestion != null && mounted) {
-            setState(() {
-              _questions.insert(0, newQuestion);
-            });
-          }
-        },
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      ),
-    );
-  }
-}
-
-// =========================================================================
-// 2. PAJ DETAY KESYON AK REPONS YO (ForumDetailsScreen)
-// =========================================================================
-class ForumDetailsScreen extends StatefulWidget {
-  final Map<String, dynamic> question;
-
-  const ForumDetailsScreen({super.key, required this.question});
-
-  @override
-  State<ForumDetailsScreen> createState() => _ForumDetailsScreenState();
-}
-
-class _ForumDetailsScreenState extends State<ForumDetailsScreen> {
-  final TextEditingController _replyController = TextEditingController();
-  
-  final List<Map<String, String>> _replies = [
-    {
-      'author': 'Jean-Pierre',
-      'time': 'Il y a 1h',
-      'content': 'Mwen te gen menm pwoblèm nan tou. Mwen te rezoud li lè m te mete yon ChangeNotifierProvider nan tèt pwojè a!'
-    },
-    {
-      'author': 'Marie Lucie',
-      'time': 'Il y a 30 min',
-      'content': 'Ou ka tcheke dokiman ofisyèl Flutter a som Provider tou, li bay bèl egzanp senp.'
-    }
-  ];
-
-  void _addReply() {
-    if (_replyController.text.trim().isNotEmpty) {
-      setState(() {
-        _replies.add({
-          'author': 'Moi',
-          'time': 'À l\'instant',
-          'content': _replyController.text.trim(),
-        });
-        _replyController.clear();
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: const Text('Détails de la discussion'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            builder: (context) => Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                left: 20,
+                right: 20,
+                top: 20,
+              ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Card(
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 1,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const CircleAvatar(
-                                backgroundColor: Colors.grey,
-                                child: Icon(Icons.person, color: Colors.white),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                  Text(
-                                    widget.question['author'] ?? 'Anonyme',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                  ),
-                                  Text(
-                                    widget.question['time'] ?? '',
-                                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            widget.question['title'] ?? '',
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          const Text(
-                            'Bonjour à tous, j\'aimerais avoir votre avis sur la meilleure façon de structurer mon code pour ce cas précis. Merci d\'avance pour vos réponses !',
-                            style: TextStyle(color: Colors.black87, height: 1.4),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
                   const Text(
-                    'Réponses',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    'Poze yon kesyon',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
-                  ListView.separated(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _replies.length,
-                    separatorBuilder: (context, index) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final reply = _replies[index];
-                      return Card(
-                        color: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0.5,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const CircleAvatar(
-                                    radius: 16,
-                                    backgroundColor: Colors.blueGrey,
-                                    child: Icon(Icons.person, color: Colors.white, size: 18),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(reply['author']!, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                  const Spacer(),
-                                  Text(reply['time']!, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(reply['content']!, style: const TextStyle(color: Colors.black87)),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, -2))],
-            ),
-            child: SafeArea(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _replyController,
-                      decoration: InputDecoration(
-                        hintText: 'Écrire une réponse...',
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      ),
+                  TextField(
+                    controller: titleController,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Tit kesyon an',
+                      border: OutlineInputBorder(),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.send, color: Colors.blue),
-                    onPressed: _addReply,
+                  const SizedBox(height: 15),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (titleController.text.trim().isNotEmpty) {
+                        setState(() {
+                          // Ajoute nouvo kesyon an nan lis la kòm "Moi"
+                          _discussions.insert(0, {
+                            'title': titleController.text.trim(),
+                            'author': 'Moi - à l\'instant',
+                            'count': '0',
+                            'avatarColor': Colors.teal,
+                          });
+                        });
+                        Navigator.pop(context); // Fèmen modal la
+                        
+                        // Si nou te nan onglè "Mes questions", nou ka mete l pou l rete la
+                        setState(() {
+                          _selectedTab = 1;
+                        });
+                      }
+                    },
+                    child: const Text('Publiye'),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// =========================================================================
-// 3. PAJ POU POZE YON NOUVO KESYON (AskQuestionScreen)
-// =========================================================================
-class AskQuestionScreen extends StatefulWidget {
-  const AskQuestionScreen({super.key});
-
-  @override
-  State<AskQuestionScreen> createState() => _AskQuestionScreenState();
-}
-
-class _AskQuestionScreenState extends State<AskQuestionScreen> {
-  final _titleController = TextEditingController();
-  final _descController = TextEditingController();
-
-  void _submit() {
-    if (_titleController.text.trim().isNotEmpty) {
-      Navigator.pop(context, {
-        'title': _titleController.text.trim(),
-        'author': 'Moi',
-        'time': 'À l\'instant',
-        'replies': 0,
-        'isMine': true,
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Poser une question'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0.5,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Votre question (Titre)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: TextField(
-                controller: _descController,
-                maxLines: null,
-                expands: true,
-                textAlignVertical: TextAlignVertical.top,
-                decoration: const InputDecoration(
-                  labelText: 'Détails de votre problème...',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D47A1)),
-                onPressed: _submit,
-                child: const Text('Publier', style: TextStyle(color: Colors.white, fontSize: 16)),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }

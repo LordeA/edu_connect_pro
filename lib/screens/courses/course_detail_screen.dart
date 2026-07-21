@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'course_lecture_screen.dart'; // Retounen ak enpòtasyon orijinal ou a
+import 'course_lecture_screen.dart';
 import 'course_quiz_screen.dart';
 
 class CourseDetailScreen extends StatefulWidget {
@@ -13,16 +12,11 @@ class CourseDetailScreen extends StatefulWidget {
 }
 
 class _CourseDetailScreenState extends State<CourseDetailScreen> {
-  bool _hasAccess = false;
+  // Aksè a louvri tout tan pa defo
+  final bool _hasAccess = true;
   
   // Swiv 12 chapit yo lè yo konplete
   final Set<int> _completedChapters = {}; 
-  
-  final _formKey = GlobalKey<FormState>();
-  final _nomController = TextEditingController();
-  final _prenomController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
 
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _chaptersSectionKey = GlobalKey();
@@ -45,16 +39,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   @override
   void dispose() {
-    _nomController.dispose();
-    _prenomController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
+  // Quiz la toujou debloque kounye a paske yo gen aksè dirèk
   bool get _isQuizUnlocked {
-    return _completedChapters.length == _chapters.length;
+    return true;
   }
 
   void _scrollToChapters() {
@@ -62,121 +53,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
       _chaptersSectionKey.currentContext!,
       duration: const Duration(milliseconds: 600),
       curve: Curves.easeInOut,
-    );
-  }
-
-  void _showRegistrationSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext bc) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(25.0),
-              topRight: Radius.circular(25.0),
-            ),
-          ),
-          padding: EdgeInsets.only(
-            top: 20,
-            left: 20,
-            right: 20,
-            bottom: MediaQuery.of(bc).viewInsets.bottom + 20,
-          ),
-          child: SingleChildScrollView(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Container(
-                      width: 50,
-                      height: 5,
-                      decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10)),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Formulaire d\'inscription',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue[900]),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: _nomController,
-                    keyboardType: TextInputType.name,
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s-àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]'))],
-                    decoration: InputDecoration(
-                      labelText: 'Nom',
-                      prefixIcon: const Icon(Icons.person_outline),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    validator: (value) => (value == null || value.trim().isEmpty) ? 'Veuillez saisir votre nom' : null,
-                  ),
-                  const SizedBox(height: 15),
-                  TextFormField(
-                    controller: _prenomController,
-                    keyboardType: TextInputType.name,
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z\s-àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ]'))],
-                    decoration: InputDecoration(
-                      labelText: 'Prénom',
-                      prefixIcon: const Icon(Icons.person_outline),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    validator: (value) => (value == null || value.trim().isEmpty) ? 'Veuillez saisir votre prénom' : null,
-                  ),
-                  const SizedBox(height: 15),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'Adresse Email',
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    validator: (value) => (value == null || value.trim().isEmpty) ? 'Veuillez saisir votre email' : null,
-                  ),
-                  const SizedBox(height: 15),
-                  TextFormField(
-                    controller: _phoneController,
-                    keyboardType: TextInputType.phone,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: InputDecoration(
-                      labelText: 'Numéro de téléphone',
-                      prefixIcon: const Icon(Icons.phone_outlined),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    validator: (value) => (value == null || value.trim().isEmpty) ? 'Veuillez saisir votre téléphone' : null,
-                  ),
-                  const SizedBox(height: 25),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          Navigator.pop(context);
-                          setState(() {
-                            _hasAccess = true;
-                          });
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0D47A1),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: const Text('Valider et Commencer', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -206,8 +82,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 gradient: const LinearGradient(colors: [Color(0xFF0D47A1), Color(0xFF1976D2)]),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Center(
-                child: Text('Flutter & Dart', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    widget.courseTitle,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold),
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 15),
@@ -264,51 +147,25 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     child: _buildDetailInfo('${_chapters.length}', 'Chapitres', isActive: true),
                   ),
 
-                  // 2. Bouton Quiz
+                  // 2. Bouton Quiz (Aksè lib kounye a)
                   GestureDetector(
                     onTap: () {
-                      if (!_hasAccess) {
-                        _showRegistrationSheet(context);
-                      } else if (!_isQuizUnlocked) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('⚠️ Terminez d\'abord les 12 chapitres pour débloquer le Quiz !'),
-                            backgroundColor: Colors.orange,
-                          ),
-                        );
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => CourseQuizScreen(courseTitle: widget.courseTitle)),
-                        );
-                      }
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => CourseQuizScreen(courseTitle: widget.courseTitle)),
+                      );
                     },
                     child: _buildDetailInfo(
                       '8', 
                       'Quiz', 
-                      isActive: _isQuizUnlocked, 
-                      isLocked: !_isQuizUnlocked,
+                      isActive: true, 
+                      isLocked: false,
                     ),
                   ),
 
                   // 3. Durée (Static)
                   _buildDetailInfo('10h', 'Durée', isActive: false),
                 ],
-              ),
-            ),
-            const SizedBox(height: 25),
-
-            // Bouton S'inscrire
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: ElevatedButton(
-                onPressed: _hasAccess ? null : () => _showRegistrationSheet(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _hasAccess ? Colors.grey : const Color(0xFF00C853),
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                child: Text(_hasAccess ? 'Déjà inscrit au cours' : 'S\'inscrire au cours', style: const TextStyle(color: Colors.white)),
               ),
             ),
             const SizedBox(height: 25),
@@ -323,8 +180,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   const Text('Chapitres', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   Text(
                     'Progression: ${_completedChapters.length}/${_chapters.length}',
-                    style: TextStyle(
-                      color: _isQuizUnlocked ? Colors.green : Colors.orange[800], 
+                    style: const TextStyle(
+                      color: Colors.green, 
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -342,29 +199,25 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 final isCompleted = _completedChapters.contains(index);
                 return GestureDetector(
                   onTap: () async {
-                    if (_hasAccess) {
-                      // Nou retounen ak paramèt orijinal yo pou CourseLectureScreen
-                      final result = await Navigator.push<bool>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CourseLectureScreen(
-                            chapterTitle: _chapters[index],
-                            chapterNumero: index + 1,
-                          ),
+                    // Tout moun ka antre sou lekti yo dirèkteman
+                    final result = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CourseLectureScreen(
+                          chapterTitle: _chapters[index],
+                          chapterNumero: index + 1,
                         ),
-                      );
+                      ),
+                    );
 
-                      if (result == true) {
-                        setState(() {
-                          _completedChapters.add(index);
-                        });
-                      }
-                    } else {
-                      _showRegistrationSheet(context);
+                    if (result == true) {
+                      setState(() {
+                        _completedChapters.add(index);
+                      });
                     }
                   },
                   child: Opacity(
-                    opacity: _hasAccess ? 1.0 : 0.5,
+                    opacity: 1.0,
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                       padding: const EdgeInsets.all(14),
@@ -379,8 +232,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       child: Row(
                         children: [
                           Icon(
-                            isCompleted ? Icons.check_circle : (_hasAccess ? Icons.play_circle_fill : Icons.lock),
-                            color: isCompleted ? Colors.green : (_hasAccess ? const Color(0xFF0D47A1) : Colors.grey),
+                            isCompleted ? Icons.check_circle : Icons.play_circle_fill,
+                            color: isCompleted ? Colors.green : const Color(0xFF0D47A1),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
