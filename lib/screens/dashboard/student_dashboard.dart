@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-// ISIT LA: Nou mete chemen konplè yo ak non pwojè w la
+import 'package:provider/provider.dart';
+import 'package:edu_connect_pro/providers/auth_provider.dart';
 import 'package:edu_connect_pro/screens/courses/course_catalog_screen.dart';
-import 'package:edu_connect_pro/screens/courses/course_detail_screen.dart'; 
+import 'package:edu_connect_pro/screens/courses/course_detail_screen.dart';
 import 'package:edu_connect_pro/screens/forum/forum_screen.dart';
 import 'package:edu_connect_pro/screens/notifications/notifications_screen.dart';
-import 'package:edu_connect_pro/screens/dashboard/student_dashboard.dart';
 import 'package:edu_connect_pro/screens/badges_list_screen.dart';
-import 'package:edu_connect_pro/screens/profile_screen.dart'; // Ajoute sa a
+import 'package:edu_connect_pro/screens/profile_screen.dart';
+import '../auth/login_screen.dart'; // Enpòtasyon pou ekran Login nan lè yo dekonekte
 
 class StudentDashboard extends StatefulWidget {
   final String userId; // Nou bezwen ID a jan nou te diskite anvan an
@@ -25,7 +26,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     ForumScreen(),
     const NotificationScreen(),
     const ProfileScreen(),  
-    ];
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +58,44 @@ class _StudentDashboardState extends State<StudentDashboard> {
 class AccueilBody extends StatelessWidget {
   const AccueilBody({super.key});
 
+  // Fonksyon konfimasyon dekoneksyon an
+  void showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: const Text(
+            'Dekoneksyon',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text('Èske w sèten ou vle dekonekte w nan aplikasyon an?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Anile', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+              },
+              child: const Text('Wi, dekonekte', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -65,7 +104,7 @@ class AccueilBody extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Entête: Bonjour, Jean Berlineda ak foto pwofil gòch / notifikasyon dwat
+            // 1. Entête: Bonjour, Jean Berlineda ak foto pwofil gòch / notifikasyon & Dekoneksyon dwat
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -81,12 +120,26 @@ class AccueilBody extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Bonjour,', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                        const Text('Jean Berlineda', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                        Text(
+                          context.watch<AuthProvider>().nom ?? 'Étudiant',
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                   ],
                 ),
-                const Icon(Icons.notifications_none, size: 26),
+                Row(
+                  children: [
+                    const Icon(Icons.notifications_none, size: 26),
+                    const SizedBox(width: 8),
+                    // Bouton dekoneksyon an ak yon bèl ti icon wouj
+                    IconButton(
+                      icon: const Icon(Icons.logout, color: Colors.red, size: 24),
+                      onPressed: () => showLogoutConfirmation(context),
+                      tooltip: 'Se déconnecter',
+                    ),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 20),
@@ -155,11 +208,29 @@ class AccueilBody extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             
-            _buildCourseItem(context, 'Flutter & Dart', 'Avancé', '4.8', 0.78, Colors.blue, false),
-            _buildCourseItem(context, 'UI/UX Design', 'Intermédiaire', '4.7', 0.45, Colors.purple, true),
+            _buildCourseItem(
+              context,
+              'Flutter & Dart',
+              'Avancé',
+              '4.8',
+              0.78,
+              Colors.blue,
+              false,
+              'Chapitre 3: Widgets et layout',
+            ),
+            _buildCourseItem(
+              context,
+              'UI/UX Design',
+              'Intermédiaire',
+              '4.7',
+              0.45,
+              Colors.purple,
+              true,
+              'Chapitre 2: Couleurs et typographie',
+            ),
             const SizedBox(height: 20),
 
-            // 4. Seksyon Badges obtenus (Nou modifye kòd la isit la pou louvri BadgesListScreen)
+            // 4. Seksyon Badges obtenus
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -198,7 +269,16 @@ class AccueilBody extends StatelessWidget {
     );
   }
 
-  Widget _buildCourseItem(BuildContext context, String title, String level, String rating, double progress, Color color, bool showRating) {
+  Widget _buildCourseItem(
+    BuildContext context,
+    String title,
+    String level,
+    String rating,
+    double progress,
+    Color color,
+    bool showRating,
+    String lesson,
+  ) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -235,8 +315,13 @@ class AccueilBody extends StatelessWidget {
                 children: [
                   Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                   Text(level, style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                  const SizedBox(height: 4),
+                  Text(
+                    lesson,
+                    style: const TextStyle(fontSize: 12, color: Colors.black87, fontWeight: FontWeight.w500),
+                  ),
                   if (showRating) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         const Icon(Icons.star, color: Colors.amber, size: 12),

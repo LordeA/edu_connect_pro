@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'register_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:edu_connect_pro/app_router.dart';
-import '../dashboard/student_dashboard.dart';
+import 'package:edu_connect_pro/providers/auth_provider.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,25 +24,131 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  // Fonksyon konfimasyon dekoneksyon an mete dirèkteman la a
+  void showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: const Text(
+            'Dekoneksyon',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text('Èske w sèten ou vle dekonekte w nan aplikasyon an?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Anile', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+              },
+              child: const Text('Wi, dekonekte', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
+    final authProvider = context.read<AuthProvider>();
 
-    // Verifye si tout chan yo ranpli
     if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('⚠️ Veuillez remplir tous les champs avant de vous connecter !'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _showSnackBar('⚠️ Veuillez remplir tous les champs !');
       return;
     }
 
-    // Si tou an règ, pase nan dashboard la
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const StudentDashboard(userId: 'ID_ELÈV_LA')),
+    final success = await authProvider.login(email: email, password: password);
+    if (!mounted) return;
+
+    if (!success) {
+      _showSnackBar(authProvider.errorMessage ?? 'Échec de la connexion.');
+      return;
+    }
+
+    _navigateAfterLogin(authProvider, email);
+  }
+
+  Future<void> _handlePasswordReset() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      _showSnackBar('Veuillez entrer votre adresse email pour réinitialiser votre mot de passe.');
+      return;
+    }
+
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.sendPasswordResetEmail(email: email);
+    if (!mounted) return;
+
+    if (success) {
+      _showSnackBar('Un email de réinitialisation a été envoyé.', backgroundColor: Colors.green);
+    } else {
+      _showSnackBar(authProvider.errorMessage ?? 'Impossible d envoyer l email de réinitialisation.');
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.loginWithGoogle();
+    if (!mounted) return;
+
+    if (!success) {
+      _showSnackBar(authProvider.errorMessage ?? 'Échec de la connexion Google.');
+      return;
+    }
+
+    _navigateAfterLogin(authProvider, _emailController.text.trim());
+  }
+
+  Future<void> _handleFacebookSignIn() async {
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.loginWithFacebook();
+    if (!mounted) return;
+
+    if (!success) {
+      _showSnackBar(authProvider.errorMessage ?? 'Échec de la connexion Facebook.');
+      return;
+    }
+
+    _navigateAfterLogin(authProvider, _emailController.text.trim());
+  }
+
+  Future<void> _handleAppleSignIn() async {
+    _showSnackBar('Connexion Apple non disponible pour le moment.');
+  }
+
+  void _navigateAfterLogin(AuthProvider authProvider, String fallbackEmail) {
+    if (authProvider.role == 'teacher') {
+      Navigator.pushReplacementNamed(context, AppRouter.teacherDashboard);
+    } else {
+      Navigator.pushReplacementNamed(
+        context,
+        AppRouter.studentDashboard,
+        arguments: authProvider.user?.uid ?? fallbackEmail,
+      );
+    }
+  }
+
+  void _showSnackBar(String message, {Color backgroundColor = Colors.red}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: backgroundColor,
+      ),
     );
   }
 
@@ -49,12 +156,27 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          // Bouton dekoneksyon ak konfimasyon sou paj Login lan
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.red),
+            onPressed: () => showLogoutConfirmation(context),
+            tooltip: 'Se déconnecter',
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 60.0),
+        padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 40),
             const Center(
               child: Text(
                 'Bienvenue !',
@@ -68,14 +190,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: TextStyle(color: Colors.grey, fontSize: 16),
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 30),
 
-            // Champ Email
-            const Text('Email ou Téléphone', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
             TextField(
               controller: _emailController,
               decoration: InputDecoration(
+                hintText: 'Email ou Téléphone',
                 filled: true,
                 fillColor: Colors.grey[100],
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -83,13 +203,11 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 20),
 
-            // Champ Mot de passe
-            const Text('Mot de passe', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
             TextField(
               controller: _passwordController,
               obscureText: _obscureText,
               decoration: InputDecoration(
+                hintText: 'Mot de passe',
                 filled: true,
                 fillColor: Colors.grey[100],
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -101,7 +219,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 15),
 
-            // Se souvenir de moi & Oublié
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -109,20 +226,23 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     Checkbox(
                       value: _rememberMe,
-                      onChanged: (value) => setState(() => _rememberMe = value!),
+                      onChanged: (value) {
+                        final rememberValue = value ?? false;
+                        setState(() => _rememberMe = rememberValue);
+                        context.read<AuthProvider>().setRememberMe(rememberValue);
+                      },
                     ),
                     const Text('Se souvenir de moi'),
                   ],
                 ),
                 TextButton(
-                  onPressed: () {},
-                  child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.grey)),
+                  onPressed: _handlePasswordReset,
+                  child: const Text('Mot de passe oublié ?', style: TextStyle(color: Colors.black54)),
                 ),
               ],
             ),
             const SizedBox(height: 20),
 
-            // Bouton Se Connecter
             SizedBox(
               width: double.infinity,
               height: 55,
@@ -137,31 +257,28 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
             const SizedBox(height: 30),
 
-            // "Ou continuer avec"
-            const Row(
-              children: [
-                Expanded(child: Divider()),
+            Row(
+              children: const [
+                Expanded(child: Divider(thickness: 1)),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  padding: EdgeInsets.symmetric(horizontal: 10),
                   child: Text('ou continuer avec', style: TextStyle(color: Colors.grey)),
                 ),
-                Expanded(child: Divider()),
+                Expanded(child: Divider(thickness: 1)),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 25),
 
-            // Boutons Rezo Sosyo yo
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _socialButton(Icons.g_mobiledata, Colors.red, () {}),
-                _socialButton(Icons.facebook, Colors.blue, () {}),
-                _socialButton(Icons.apple, Colors.black, () {}),
+                _buildSocialButton(Icons.g_mobiledata, Colors.red, _handleGoogleSignIn),
+                _buildSocialButton(Icons.facebook, Colors.blue, _handleFacebookSignIn),
+                _buildSocialButton(Icons.apple, Colors.black, _handleAppleSignIn),
               ],
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 35),
 
-            // Lyen pou kreye kont
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -180,16 +297,17 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _socialButton(IconData icon, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
+  Widget _buildSocialButton(IconData icon, Color color, VoidCallback onPressed) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          border: Border.all(color: Colors.grey.shade300),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, size: 32, color: color),
+        child: Icon(icon, size: 30, color: color),
       ),
     );
   }

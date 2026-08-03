@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:edu_connect_pro/screens/quiz/quiz_result_screen.dart'; // Enpòtasyon paj rezilta a pou liyaj la ka fèt
+import '../auth/login_screen.dart'; // Asire w chemen sa a kòrèk pou retounen sou Login
 
 class CourseQuizScreen extends StatefulWidget {
   final String courseTitle;
@@ -99,6 +100,44 @@ class _CourseQuizScreenState extends State<CourseQuizScreen> {
     },
   ];
 
+  // Fonksyon konfimasyon dekoneksyon an
+  void showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: const Text(
+            'Dekoneksyon',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text('Èske w sèten ou vle dekonekte w nan aplikasyon an?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Anile', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+              },
+              child: const Text('Wi, dekonekte', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentQuestion = _questions[_currentQuestionIndex];
@@ -135,7 +174,14 @@ class _CourseQuizScreenState extends State<CourseQuizScreen> {
                   fontSize: 15,
                 ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
+              // Bouton dekoneksyon nan AppBar la
+              IconButton(
+                icon: const Icon(Icons.logout, color: Colors.red),
+                onPressed: () => showLogoutConfirmation(context),
+                tooltip: 'Se déconnecter',
+              ),
+              const SizedBox(width: 8),
             ],
           ),
         ],

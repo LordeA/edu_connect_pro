@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ModifierProfilScreen extends StatefulWidget {
   const ModifierProfilScreen({super.key});
@@ -9,9 +10,24 @@ class ModifierProfilScreen extends StatefulWidget {
 
 class _ModifierProfilScreenState extends State<ModifierProfilScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nomController = TextEditingController(text: 'Elève Junior');
-  final _emailController = TextEditingController(text: 'junior@educonnect.com');
-  final _telController = TextEditingController(text: '+509 3333-3333');
+  
+  // Pran enfòmasyon itilizatè ki konekte kounye a nan Firebase si l egziste
+  final User? currentUser = FirebaseAuth.instance.currentUser;
+
+  late final TextEditingController _nomController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _telController;
+  
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inisyalize chan yo ak vrè enfòmasyon itilizatè a (oswa tèks pa defo)
+    _nomController = TextEditingController(text: currentUser?.displayName ?? 'Elève Junior');
+    _emailController = TextEditingController(text: currentUser?.email ?? 'junior@educonnect.com');
+    _telController = TextEditingController(text: currentUser?.phoneNumber ?? '+509 3333-3333');
+  }
 
   @override
   void dispose() {
@@ -19,6 +35,62 @@ class _ModifierProfilScreenState extends State<ModifierProfilScreen> {
     _emailController.dispose();
     _telController.dispose();
     super.dispose();
+  }
+
+  // Fonksyon pou anrejistre modifikasyon yo
+  Future<void> _saveProfileChanges() async {
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez corriger les champs en erreur avant de continuer.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      if (currentUser != null) {
+        if (_nomController.text.trim() != currentUser!.displayName) {
+          await currentUser!.updateDisplayName(_nomController.text.trim());
+        }
+
+        if (_emailController.text.trim() != currentUser!.email) {
+          await currentUser!.verifyBeforeUpdateEmail(_emailController.text.trim());
+        }
+      }
+
+      await Future.delayed(const Duration(seconds: 1));
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Profil mis à jour avec succès !'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Erreur lors de la mise à jour : $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -54,7 +126,7 @@ class _ModifierProfilScreenState extends State<ModifierProfilScreen> {
               ),
               const SizedBox(height: 32),
               
-              // Validasyon Non
+              // Nom complet
               TextFormField(
                 controller: _nomController,
                 decoration: _buildInputDecoration('Nom Complet', isDark),
@@ -67,25 +139,25 @@ class _ModifierProfilScreenState extends State<ModifierProfilScreen> {
               ),
               const SizedBox(height: 16),
               
-              // Validasyon Email
+              // Email (Avèk validasyon strik pou '@' ak pwen an)
               TextFormField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: _buildInputDecoration('Email', isDark),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Silvouplè, antre yon imel';
+                    return 'Veuillez entrer votre email';
                   }
-                  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                  final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[a-zA-Z]{2,}$');
                   if (!emailRegex.hasMatch(value.trim())) {
-                    return 'Fòma imel sa a pa kòrèk (manke @ oswa .com)';
+                    return 'Adresse email invalide (le "@" ou le domaine est manquant)';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               
-              // Validasyon Telefòn
+              // Téléphone
               TextFormField(
                 controller: _telController,
                 keyboardType: TextInputType.phone,
@@ -102,23 +174,26 @@ class _ModifierProfilScreenState extends State<ModifierProfilScreen> {
               ),
               const SizedBox(height: 40),
               
+              // Bouton Enregistrer ak Loading
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Profil mis à jour avec succès !')),
-                      );
-                    }
-                  },
+                  onPressed: _isLoading ? null : _saveProfileChanges,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0D47A1),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('Enregistrer', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                        )
+                      : const Text(
+                          'Sauvegarder les modifications',
+                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
                 ),
               ),
             ],
@@ -135,9 +210,13 @@ class _ModifierProfilScreenState extends State<ModifierProfilScreen> {
       fillColor: isDark ? Colors.grey[900] : Colors.white,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+        borderSide: BorderSide(color: Colors.grey.shade300),
       ),
-      errorStyle: const TextStyle(color: Colors.redAccent),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      errorStyle: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
     );
   }
 }

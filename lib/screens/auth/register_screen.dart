@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:edu_connect_pro/app_router.dart';
+import 'package:edu_connect_pro/providers/auth_provider.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -33,6 +37,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  // Fonksyon pou jere navigasyon an apre yo peze S'inscrire
+  Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez remplir tous les champs requis correctement.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ Les mots de passe ne correspondent pas !'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.register(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      nom: '${_prenomController.text.trim()} ${_nomController.text.trim()}',
+      role: _selectedRole == 'Enseignant' ? 'teacher' : 'student',
+      institution: _phoneController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Échec de l\'inscription.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedRole == 'Enseignant') {
+      Navigator.pushReplacementNamed(context, AppRouter.teacherDashboard);
+      return;
+    }
+
+    Navigator.pushReplacementNamed(
+      context,
+      AppRouter.studentDashboard,
+      arguments: authProvider.user?.uid ?? _emailController.text.trim(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -50,6 +109,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 10.0),
           child: Form(
             key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -189,11 +249,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        // Lojik pou anrejistre itilizatè a
-                      }
-                    },
+                    onPressed: _handleRegister,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0D47A1),
                       shape: RoundedRectangleBorder(
@@ -217,7 +273,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Center(
                   child: GestureDetector(
                     onTap: () {
-                      Navigator.pop(context);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LoginScreen()),
+                      );
                     },
                     child: RichText(
                       text: TextSpan(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'course_lecture_screen.dart';
 import 'course_quiz_screen.dart';
+import '../auth/login_screen.dart'; // Asire w chemen sa a kòrèk pou retounen sou Login
 
 class CourseDetailScreen extends StatefulWidget {
   final String courseTitle;
@@ -21,21 +22,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _chaptersSectionKey = GlobalKey();
 
-  // Lis 12 Chapit yo jan sa dwe ye pou yon kou Flutter konplè
-  final List<String> _chapters = [
-    '1- Introduction à Flutter & Mobile',
-    '2- Installation du SDK & Configuration',
-    '3- Les bases du langage Dart',
-    '4- Concepts de Programmation Orientée Objet',
-    '5- Premier pas avec les Widgets de base',
-    '6- Création de Layouts complexes',
-    '7- Gestion des États (State Management)',
-    '8- Navigation et Routage entre écrans',
-    '9- Connexion aux APIs et services Web',
-    '10- Stockage de données locales (SQFlite)',
-    '11- Intégration de Firebase (Auth & Firestore)',
-    '12- Déploiement sur Play Store & App Store'
-  ];
+  late final List<String> _chapters;
+
+  @override
+  void initState() {
+    super.initState();
+    _chapters = _buildChaptersForCourse(widget.courseTitle);
+  }
 
   @override
   void dispose() {
@@ -48,11 +41,114 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     return true;
   }
 
+  List<String> _buildChaptersForCourse(String courseTitle) {
+    switch (courseTitle) {
+      case 'Flutter & Dart':
+        return [
+          '1- Introduction à Flutter & mobile',
+          '2- Installation du SDK & configuration',
+          '3- Bases du langage Dart',
+          '4- Widgets et composition UI',
+          '5- Gestion des états et Provider',
+          '6- Navigation et routage',
+          '7- Connexion aux APIs REST',
+          '8- Stockage local et Firestore',
+          '9- Authentification Firebase',
+          '10- Publication sur Android & iOS',
+        ];
+      case 'UI/UX Design':
+        return [
+          '1- Principes du design centré utilisateur',
+          '2- Grilles et typographie',
+          '3- Couleurs et contrastes',
+          '4- Design d’interfaces mobiles',
+          '5- Prototypage et wireframes',
+          '6- Tests utilisateur et retours',
+          '7- Accessibilité et ergonomie',
+          '8- Animation et micro-interactions',
+          '9- Brand design et identité visuelle',
+          '10- Présentation de portfolio design',
+        ];
+      case 'Marketing Digital':
+        return [
+          '1- Fondamentaux du marketing digital',
+          '2- SEO et contenu optimisé',
+          '3- Publicité sur les réseaux sociaux',
+          '4- Email marketing efficace',
+          '5- Analytics et suivi de performance',
+          '6- Brand awareness et storytelling',
+          '7- Conversion et tunnel de vente',
+          '8- Community management',
+          '9- Marketing automation',
+          '10- Campagnes à budget limité',
+        ];
+      case 'Gestion de Projet':
+        return [
+          '1- Introduction à la gestion de projet',
+          '2- Méthodes Agile et Scrum',
+          '3- Planification et jalons',
+          '4- Gestion des risques',
+          '5- Communication d’équipe',
+          '6- Suivi de l’avancement',
+          '7- Gestion du budget',
+          '8- Livrables et qualité',
+          '9- Leadership et motivation',
+          '10- Clôture de projet et bilan',
+        ];
+      default:
+        return [
+          '1- Introduction générale',
+          '2- Concepts clés',
+          '3- Approfondissement',
+          '4- Études de cas',
+          '5- Résumé et prochaines étapes',
+        ];
+    }
+  }
+
   void _scrollToChapters() {
     Scrollable.ensureVisible(
       _chaptersSectionKey.currentContext!,
       duration: const Duration(milliseconds: 600),
       curve: Curves.easeInOut,
+    );
+  }
+
+  // Fonksyon konfimasyon dekoneksyon an
+  void showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: const Text(
+            'Dekoneksyon',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text('Èske w sèten ou vle dekonekte w nan aplikasyon an?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Anile', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+              },
+              child: const Text('Wi, dekonekte', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -67,6 +163,14 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          // Bouton dekoneksyon ak icon logout nan AppBar la
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.red),
+            onPressed: () => showLogoutConfirmation(context),
+            tooltip: 'Se déconnecter',
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         controller: _scrollController,
@@ -100,8 +204,28 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Row(
                 children: [
-                  const Icon(Icons.person, color: Color(0xFF0D47A1), size: 18),
-                  const SizedBox(width: 6),
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/images/Enseignant.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   const Text(
                     'Prof. Jean Claude',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
@@ -204,8 +328,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => CourseLectureScreen(
+                          courseTitle: widget.courseTitle,
                           chapterTitle: _chapters[index],
                           chapterNumero: index + 1,
+                          totalChapters: _chapters.length,
                         ),
                       ),
                     );

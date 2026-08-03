@@ -5,6 +5,8 @@
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -69,6 +71,74 @@ class AuthService {
     }
   }
 
+  Future<User?> loginWithGoogle() async {
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return null;
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      final userCredential = await _auth.signInWithCredential(credential);
+      final user = userCredential.user;
+      if (user != null) {
+        await _createUserIfMissing(user);
+      }
+      return user;
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthError(e);
+    } catch (e) {
+      throw Exception('La connexion Google a échoué : $e');
+    }
+  }
+
+  Future<User?> loginWithFacebook() async {
+    try {
+      final result = await FacebookAuth.instance.login(
+        permissions: ['email', 'public_profile'],
+      );
+      if (result.status != LoginStatus.success || result.accessToken == null) {
+        return null;
+      }
+      final credential = FacebookAuthProvider.credential(result.accessToken!.token);
+      final userCredential = await _auth.signInWithCredential(credential);
+      final user = userCredential.user;
+      if (user != null) {
+        await _createUserIfMissing(user);
+      }
+      return user;
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthError(e);
+    } catch (e) {
+      throw Exception('La connexion Facebook a échoué : $e');
+    }
+  }
+
+  Future<void> sendPasswordResetEmail({
+    required String email,
+  }) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthError(e);
+    }
+  }
+
+  Future<void> _createUserIfMissing(User user) async {
+    final userDoc = _firestore.collection('users').doc(user.uid);
+    final snapshot = await userDoc.get();
+    if (!snapshot.exists) {
+      await userDoc.set({
+        'role': 'student',
+        'nom': user.displayName ?? user.email?.split('@').first ?? 'Utilisateur',
+        'avatarURL': user.photoURL ?? '',
+        'institution': '',
+        'createdAt': Timestamp.now(),
+      });
+    }
+  }
+
   // ----------------------------------------------------------
   // DÉCONNEXION
   // ----------------------------------------------------------
@@ -77,12 +147,18 @@ class AuthService {
   }
 
   // ----------------------------------------------------------
-  // RÉCUPÉRER LE RÔLE D'UN UTILISATEUR DEPUIS FIRESTORE
+  // RÉCUPÉRER LE RÔLE ET LE NOM D'UN UTILISATEUR DEPUIS FIRESTORE
   // ----------------------------------------------------------
   Future<String?> getUserRole(String uid) async {
     final doc = await _firestore.collection('users').doc(uid).get();
     if (!doc.exists) return null;
     return doc.data()?['role'] as String?;
+  }
+
+  Future<String?> getUserName(String uid) async {
+    final doc = await _firestore.collection('users').doc(uid).get();
+    if (!doc.exists) return null;
+    return doc.data()?['nom'] as String?;
   }
 
   // ----------------------------------------------------------

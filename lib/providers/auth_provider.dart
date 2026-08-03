@@ -12,17 +12,28 @@ class AuthProvider extends ChangeNotifier {
 
   User? _user;
   String? _role; // 'teacher' | 'student'
+  String? _nom;
   bool _isLoading = false;
+  bool _rememberMe = false;
+  bool _initialized = false;
   String? _errorMessage;
 
   // Getters publics
   User? get user => _user;
+  String? get nom => _nom;
   String? get role => _role;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _user != null;
   bool get isTeacher => _role == 'teacher';
   bool get isStudent => _role == 'student';
+  bool get rememberMe => _rememberMe;
+  bool get isInitialized => _initialized;
+
+  void setRememberMe(bool value) {
+    _rememberMe = value;
+    notifyListeners();
+  }
 
   AuthProvider() {
     // Écoute les changements de session en continu
@@ -30,9 +41,12 @@ class AuthProvider extends ChangeNotifier {
       _user = user;
       if (user != null) {
         _role = await _authService.getUserRole(user.uid);
+        _nom = await _authService.getUserName(user.uid);
       } else {
         _role = null;
+        _nom = null;
       }
+      _initialized = true;
       notifyListeners();
     });
   }
@@ -59,6 +73,7 @@ class AuthProvider extends ChangeNotifier {
       );
       _user = user;
       _role = role;
+      _nom = nom;
       _setLoading(false);
       return true;
     } catch (e) {
@@ -82,7 +97,68 @@ class AuthProvider extends ChangeNotifier {
       _user = user;
       if (user != null) {
         _role = await _authService.getUserRole(user.uid);
+        _nom = await _authService.getUserName(user.uid);
       }
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> loginWithGoogle() async {
+    _setLoading(true);
+    _errorMessage = null;
+    try {
+      final user = await _authService.loginWithGoogle();
+      if (user == null) {
+        _errorMessage = 'Connexion Google annulée.';
+        _setLoading(false);
+        return false;
+      }
+      _user = user;
+      _role = await _authService.getUserRole(user.uid);
+      _nom = await _authService.getUserName(user.uid);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> loginWithFacebook() async {
+    _setLoading(true);
+    _errorMessage = null;
+    try {
+      final user = await _authService.loginWithFacebook();
+      if (user == null) {
+        _errorMessage = 'Connexion Facebook annulée.';
+        _setLoading(false);
+        return false;
+      }
+      _user = user;
+      _role = await _authService.getUserRole(user.uid);
+      _nom = await _authService.getUserName(user.uid);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> sendPasswordResetEmail({
+    required String email,
+  }) async {
+    _setLoading(true);
+    _errorMessage = null;
+    try {
+      await _authService.sendPasswordResetEmail(email: email);
       _setLoading(false);
       return true;
     } catch (e) {
@@ -100,6 +176,14 @@ class AuthProvider extends ChangeNotifier {
     _user = null;
     _role = null;
     notifyListeners();
+  }
+
+  Future<void> loadUserData() async {
+    if (_user != null) {
+      _role = await _authService.getUserRole(_user!.uid);
+      _nom = await _authService.getUserName(_user!.uid);
+      notifyListeners();
+    }
   }
 
   void _setLoading(bool value) {

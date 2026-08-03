@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'course_detail_screen.dart';
+import '../auth/login_screen.dart'; // Asire w chemen sa a kòrèk pou retounen sou Login
 
 class CourseCatalogScreen extends StatefulWidget {
   const CourseCatalogScreen({super.key});
@@ -58,6 +59,44 @@ class _CourseCatalogScreenState extends State<CourseCatalogScreen> {
     super.dispose();
   }
 
+  // Fonksyon konfimasyon dekoneksyon an
+  void showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: const Text(
+            'Dekoneksyon',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: const Text('Èske w sèten ou vle dekonekte w nan aplikasyon an?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Anile', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  (route) => false,
+                );
+              },
+              child: const Text('Wi, dekonekte', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Lojik filtraj la: kòmanse ak lèt w ap tape a (startsWith) epi kategori a
@@ -84,6 +123,14 @@ class _CourseCatalogScreenState extends State<CourseCatalogScreen> {
           'Catalogue des cours',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          // Bouton dekoneksyon ki nan AppBar la
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.red),
+            onPressed: () => showLogoutConfirmation(context),
+            tooltip: 'Se déconnecter',
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),

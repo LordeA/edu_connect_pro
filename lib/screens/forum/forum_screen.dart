@@ -279,7 +279,7 @@ class _ForumScreenState extends State<ForumScreen> {
                         });
                       }
                     },
-                    child: const Text('Publiye'),
+                    child: const Text('Publier'),
                   ),
                 ],
               ),
