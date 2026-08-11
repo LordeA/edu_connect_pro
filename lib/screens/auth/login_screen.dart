@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/auth_service.dart';
 import 'register_screen.dart';
-import '../dashboard/student_dashboard.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -165,18 +167,42 @@ class _LoginScreenState extends State<LoginScreen> {
             SizedBox(
               width: double.infinity,
               height: 55,
-              child: ElevatedButton(
-                onPressed: () {
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => StudentDashboard(userId: 'ID_ELEV _LA')), // Remplacez '12345' par l'ID réel de l'utilisateur après la connexion
-  );
-},
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF0D47A1),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: const Text('Se connecter', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              child: Consumer<AuthProvider>(
+                builder: (context, authProvider, _) {
+                  return ElevatedButton(
+                    onPressed: authProvider.isLoading
+                        ? null
+                        : () async {
+                            final success = await authProvider.login(
+                              email: _emailController.text.trim(),
+                              password: _passwordController.text,
+                            );
+                            if (!mounted) return;
+                            if (success) {
+                              if (!context.mounted) return;
+                              final route = AuthService.dashboardRouteForRole(authProvider.role);
+                              if (route == '/login') {
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Rôle utilisateur introuvable.')));
+                                return;
+                              }
+                              Navigator.of(context).pushNamedAndRemoveUntil(route, (route) => false);
+                            } else {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(authProvider.errorMessage ?? 'Connexion impossible.')),
+                              );
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0D47A1),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: authProvider.isLoading
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text('Se connecter', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  );
+                },
               ),
             ),
             const SizedBox(height: 30),
@@ -248,7 +274,7 @@ class _LoginScreenState extends State<LoginScreen> {
         width: 56,
         height: 56,
         decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.withOpacity(0.3)),
+          border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(child: Icon(icon, size: 28, color: color)),

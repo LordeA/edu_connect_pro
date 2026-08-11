@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-// ISIT LA: Nou mete chemen konplè yo ak non pwojè w la
+import 'package:provider/provider.dart';
+import 'package:edu_connect_pro/models/firestore_models.dart';
+import 'package:edu_connect_pro/providers/auth_provider.dart';
+import 'package:edu_connect_pro/screens/badges_list_screen.dart';
 import 'package:edu_connect_pro/screens/courses/course_catalog_screen.dart';
-import 'package:edu_connect_pro/screens/courses/course_detail_screen.dart'; 
+import 'package:edu_connect_pro/screens/courses/course_detail_screen.dart';
 import 'package:edu_connect_pro/screens/forum/forum_screen.dart';
 import 'package:edu_connect_pro/screens/notifications/notifications_screen.dart';
-import 'package:edu_connect_pro/screens/dashboard/student_dashboard.dart';
-import 'package:edu_connect_pro/screens/badges_list_screen.dart';
-import 'package:edu_connect_pro/screens/profile_screen.dart'; // Ajoute sa a
+import 'package:edu_connect_pro/screens/profile_screen.dart';
 
 class StudentDashboard extends StatefulWidget {
-  final String userId; // Nou bezwen ID a jan nou te diskite anvan an
+  final String userId;
   const StudentDashboard({super.key, required this.userId});
 
   @override
@@ -19,12 +20,19 @@ class StudentDashboard extends StatefulWidget {
 class _StudentDashboardState extends State<StudentDashboard> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    const AccueilBody(), 
-    const CourseCatalogScreen(),
-    const ForumScreen(),
-    const NotificationScreen(),
-          ProfileScreen(userId: 'ID_ELÈV_LA'),  ];
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      AccueilBody(userId: widget.userId),
+      const CourseCatalogScreen(),
+      const ForumScreen(),
+      const NotificationScreen(),
+      ProfileScreen(userId: widget.userId),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +62,8 @@ class _StudentDashboardState extends State<StudentDashboard> {
 }
 
 class AccueilBody extends StatelessWidget {
-  const AccueilBody({super.key});
+  final String userId;
+  const AccueilBody({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {
@@ -76,12 +85,17 @@ class AccueilBody extends StatelessWidget {
                       child: Icon(Icons.person, color: Colors.white, size: 26),
                     ),
                     const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Bonjour,', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                        const Text('Jean Berlineda', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                      ],
+                    Consumer<AuthProvider>(
+                      builder: (context, authProvider, _) {
+                        final name = authProvider.user?.email?.split('@').first ?? 'Étudiant';
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Bonjour,', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                            Text(name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -98,7 +112,7 @@ class AccueilBody extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.03),
+                    color: Colors.black.withValues(alpha: 0.03),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   )
@@ -156,6 +170,7 @@ class AccueilBody extends StatelessWidget {
             
             _buildCourseItem(context, 'Flutter & Dart', 'Avancé', '4.8', 0.78, Colors.blue, false),
             _buildCourseItem(context, 'UI/UX Design', 'Intermédiaire', '4.7', 0.45, Colors.purple, true),
+            Text('Compte connecté: $userId', style: const TextStyle(fontSize: 11, color: Colors.grey)),
             const SizedBox(height: 20),
 
             // 4. Seksyon Badges obtenus (Nou modifye kòd la isit la pou louvri BadgesListScreen)
@@ -202,7 +217,22 @@ class AccueilBody extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => CourseDetailScreen(courseTitle: title)),
+          MaterialPageRoute(
+            builder: (context) => CourseDetailScreen(
+              course: CourseModel(
+                id: title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_'),
+                teacherId: '',
+                titre: title,
+                description: 'Cours publié depuis le tableau de bord étudiant.',
+                categorie: level,
+                coverURL: '',
+                chapitresCount: 0,
+                inscritCount: 0,
+                isPublie: true,
+                createdAt: DateTime.now(),
+              ),
+            ),
+          ),
         );
       },
       child: Container(
@@ -213,7 +243,7 @@ class AccueilBody extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 6,
               offset: const Offset(0, 2),
             )
@@ -224,7 +254,7 @@ class AccueilBody extends StatelessWidget {
             Container(
               width: 44,
               height: 44,
-              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
               child: Icon(Icons.menu_book, color: color, size: 22),
             ),
             const SizedBox(width: 12),

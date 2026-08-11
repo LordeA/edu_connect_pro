@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class TeacherDashboard extends StatelessWidget {
   const TeacherDashboard({super.key});
@@ -88,6 +89,16 @@ class TeacherDashboard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 30),
+
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => context.push('/teacher/courses'),
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: const Text('Créer un nouveau cours'),
+                ),
+              ),
+              const SizedBox(height: 20),
 
               // 4. Activités récentes
               const Text('Activités récentes', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),

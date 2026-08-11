@@ -3,17 +3,28 @@ import 'package:flutter/material.dart';
 class CourseLectureScreen extends StatelessWidget {
   final String chapterTitle;
   final int chapterNumero;
+  final String chapterContent;
+  final String chapterMedia;
 
   const CourseLectureScreen({
     super.key,
     required this.chapterTitle,
     required this.chapterNumero,
+    this.chapterContent = '',
+    this.chapterMedia = '',
   });
 
   @override
   Widget build(BuildContext context) {
-    // Nou retire nimewo ki devan tit la pou afiche tit la byen pwòp tankou nan makèt la
     final cleanTitle = chapterTitle.replaceFirst(RegExp(r'^\d+\s*-\s*'), '');
+    final bodyText = chapterContent.isNotEmpty
+        ? chapterContent
+        : 'Flutter est un framework UI de Google pour créer des applications natives sur mobile, web et desktop à partir d\'une seule base de code.';
+    final resources = chapterMedia
+        .split(RegExp(r'\r?\n'))
+        .map((line) => line.trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -71,7 +82,7 @@ class CourseLectureScreen extends StatelessWidget {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),
@@ -87,7 +98,7 @@ class CourseLectureScreen extends StatelessWidget {
                             child: Icon(
                               Icons.grid_4x4,
                               size: 140,
-                              color: Colors.white.withOpacity(0.02),
+                              color: Colors.white.withValues(alpha: 0.02),
                             ),
                           ),
                           // Logo Flutter a nan mitan
@@ -97,27 +108,45 @@ class CourseLectureScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 25),
 
-                    // Premye Paragraf Tèks la
-                    const Text(
-                      "Flutter est un framework UI de Google pour créer des applications natives sur mobile, web et desktop à partir d'une seule base de code.",
-                      style: TextStyle(
+                    Text(
+                      bodyText,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                         color: Colors.black87,
                         height: 1.5,
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Dezyèm Paragraf Tèks la
-                    const Text(
-                      "Il utilise le langage Dart et offre des performances exceptionnelles.",
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.black54,
-                        height: 1.5,
+                    if (resources.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F7FF),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFCFD8E3)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Ressources du chapitre', style: TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            ...resources.map((resource) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 6),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Icon(Icons.link, size: 16, color: Color(0xFF0D47A1)),
+                                      const SizedBox(width: 6),
+                                      Expanded(child: Text(resource, style: const TextStyle(color: Colors.black87))),
+                                    ],
+                                  ),
+                                )),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                     const SizedBox(height: 30),
                   ],
                 ),
@@ -189,7 +218,7 @@ class CourseLectureScreen extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               elevation: 1,
-                              shadowColor: Colors.black.withOpacity(0.05),
+                              shadowColor: Colors.black.withValues(alpha: 0.05),
                             ),
                             child: const Text(
                               'Précédent',

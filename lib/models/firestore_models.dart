@@ -118,6 +118,7 @@ class ChapitreModel {
   final String id;
   final String titre;
   final String contenu;   // Texte Markdown du chapitre
+  final String media;     // Ressources / liens / médias associés
   final int ordre;        // Position dans le cours (1, 2, 3...)
   final bool hasQuiz;     // Indique si un quiz est associé
 
@@ -125,6 +126,7 @@ class ChapitreModel {
     required this.id,
     required this.titre,
     required this.contenu,
+    required this.media,
     required this.ordre,
     required this.hasQuiz,
   });
@@ -135,6 +137,7 @@ class ChapitreModel {
       id: doc.id,
       titre: data['titre'] ?? '',
       contenu: data['contenu'] ?? '',
+      media: data['media'] ?? '',
       ordre: data['ordre'] ?? 0,
       hasQuiz: data['hasQuiz'] ?? false,
     );
@@ -144,6 +147,7 @@ class ChapitreModel {
     return {
       'titre': titre,
       'contenu': contenu,
+      'media': media,
       'ordre': ordre,
       'hasQuiz': hasQuiz,
     };
@@ -353,6 +357,50 @@ class CommentaireModel {
 
   Map<String, dynamic> toMap() {
     return {
+      'auteurId': auteurId,
+      'auteurNom': auteurNom,
+      'contenu': contenu,
+      'role': role,
+      'createdAt': Timestamp.fromDate(createdAt),
+    };
+  }
+}
+
+class AnnouncementModel {
+  final String id;
+  final String courseId;
+  final String auteurId;
+  final String auteurNom;
+  final String contenu;
+  final String role;
+  final DateTime createdAt;
+
+  AnnouncementModel({
+    required this.id,
+    required this.courseId,
+    required this.auteurId,
+    required this.auteurNom,
+    required this.contenu,
+    required this.role,
+    required this.createdAt,
+  });
+
+  factory AnnouncementModel.fromDoc(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return AnnouncementModel(
+      id: doc.id,
+      courseId: data['courseId'] ?? '',
+      auteurId: data['auteurId'] ?? '',
+      auteurNom: data['auteurNom'] ?? '',
+      contenu: data['contenu'] ?? '',
+      role: data['role'] ?? 'teacher',
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'courseId': courseId,
       'auteurId': auteurId,
       'auteurNom': auteurNom,
       'contenu': contenu,

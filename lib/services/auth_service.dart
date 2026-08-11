@@ -10,6 +10,17 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  static String dashboardRouteForRole(String? role) {
+    switch (role) {
+      case 'teacher':
+        return '/teacher-dashboard';
+      case 'student':
+        return '/student-dashboard';
+      default:
+        return '/login';
+    }
+  }
+
   // Stream qui écoute les changements de session (connecté/déconnecté)
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 

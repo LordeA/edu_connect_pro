@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'course_detail_screen.dart'; // Sa enpòtan anpil pou paj 7 la ka louvri!
+
+import '../../models/firestore_models.dart';
+import '../../services/course_service.dart';
+import 'course_detail_screen.dart';
 
 class CourseCatalogScreen extends StatefulWidget {
   const CourseCatalogScreen({super.key});
@@ -10,52 +13,16 @@ class CourseCatalogScreen extends StatefulWidget {
 
 class _CourseCatalogScreenState extends State<CourseCatalogScreen> {
   String _selectedCategory = 'Tous';
+  late final Future<List<CourseModel>> _coursesFuture;
 
-  final List<Map<String, dynamic>> _allCourses = [
-    {
-      'title': 'Flutter & Dart',
-      'level': 'Avancé',
-      'students': '120 étudiants',
-      'rating': '4.8',
-      'progress': 0.72,
-      'color': Colors.blue,
-      'category': 'Développement',
-    },
-    {
-      'title': 'UI/UX Design',
-      'level': 'Intermédiaire',
-      'students': '56 étudiants',
-      'rating': '4.7',
-      'progress': 0.45,
-      'color': Colors.purple,
-      'category': 'Design',
-    },
-    {
-      'title': 'Marketing Digital',
-      'level': 'Débutant',
-      'students': '120 étudiants',
-      'rating': '4.6',
-      'progress': 0.30,
-      'color': Colors.orange,
-      'category': 'Business',
-    },
-    {
-      'title': 'Gestion de Projet',
-      'level': 'Intermédiaire',
-      'students': '85 étudiants',
-      'rating': '4.5',
-      'progress': 0.60,
-      'color': Colors.green,
-      'category': 'Business',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _coursesFuture = CourseService().getPublishedCourses();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> filteredCourses = _selectedCategory == 'Tous'
-        ? _allCourses
-        : _allCourses.where((course) => course['category'] == _selectedCategory).toList();
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -78,7 +45,7 @@ class _CourseCatalogScreenState extends State<CourseCatalogScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(30),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10)],
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10)],
               ),
               child: const TextField(
                 decoration: InputDecoration(
@@ -104,20 +71,50 @@ class _CourseCatalogScreenState extends State<CourseCatalogScreen> {
             ),
             const SizedBox(height: 25),
 
-            // 3. Lis kou yo (Konekte kounye a ak paj 7 la nèt ale)
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filteredCourses.length,
-              itemBuilder: (context, index) {
-                final course = filteredCourses[index];
-                return _buildCatalogCourseItem(
-                  context,
-                  course['title'],
-                  '${course['level']} - ${course['students']}',
-                  course['rating'],
-                  course['progress'],
-                  course['color'],
+            FutureBuilder<List<CourseModel>>(
+              future: _coursesFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: Text('Aucun cours publié pour le moment.')),
+                  );
+                }
+
+                final courses = snapshot.data!
+                    .where((course) => _selectedCategory == 'Tous' || course.categorie == _selectedCategory)
+                    .toList();
+
+                if (courses.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: Text('Aucun cours dans cette catégorie.')),
+                  );
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: courses.length,
+                  itemBuilder: (context, index) {
+                    final course = courses[index];
+                    final color = index.isEven ? Colors.blue : Colors.purple;
+                    return _buildCatalogCourseItem(
+                      context,
+                      course.titre,
+                      '${course.categorie} • ${course.inscritCount} inscrits',
+                      '4.8',
+                      0.6 + (index % 3) * 0.1,
+                      color,
+                      course,
+                    );
+                  },
                 );
               },
             ),
@@ -156,14 +153,14 @@ class _CourseCatalogScreenState extends State<CourseCatalogScreen> {
     );
   }
 
-  Widget _buildCatalogCourseItem(BuildContext context, String title, String subtitle, String rating, double progress, Color color) {
+  Widget _buildCatalogCourseItem(BuildContext context, String title, String subtitle, String rating, double progress, Color color, CourseModel course) {
     return GestureDetector(
       onTap: () {
         // Isit la nou fòse navigasyon an louvri paj 7 la (CourseDetailScreen)
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => CourseDetailScreen(courseTitle: title),
+            builder: (context) => CourseDetailScreen(course: course),
           ),
         );
       },
@@ -173,14 +170,14 @@ class _CourseCatalogScreenState extends State<CourseCatalogScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 5)],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.01), blurRadius: 5)],
         ),
         child: Row(
           children: [
             Container(
               width: 50,
               height: 50,
-              decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+              decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
               child: const Icon(Icons.assignment, color: Colors.blue), 
             ),
             const SizedBox(width: 15),

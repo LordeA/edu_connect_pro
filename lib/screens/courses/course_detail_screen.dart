@@ -1,19 +1,29 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'course_lecture_screen.dart'; // Retounen ak enpòtasyon orijinal ou a
+
+import 'package:provider/provider.dart';
+
+import '../../models/firestore_models.dart';
+import '../../providers/auth_provider.dart' as app_auth;
+import '../../services/course_service.dart';
+import 'course_lecture_screen.dart';
 import 'course_quiz_screen.dart';
 
 class CourseDetailScreen extends StatefulWidget {
-  final String courseTitle;
+  final CourseModel course;
 
-  const CourseDetailScreen({super.key, required this.courseTitle});
+  const CourseDetailScreen({super.key, required this.course});
 
   @override
   State<CourseDetailScreen> createState() => _CourseDetailScreenState();
 }
 
 class _CourseDetailScreenState extends State<CourseDetailScreen> {
+  final CourseService _courseService = CourseService();
+
   bool _hasAccess = false;
+  bool _isLoadingEnrollment = false;
   
   // Swiv 12 chapit yo lè yo konplete
   final Set<int> _completedChapters = {}; 
@@ -27,21 +37,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _chaptersSectionKey = GlobalKey();
 
-  // Lis 12 Chapit yo jan sa dwe ye pou yon kou Flutter konplè
-  final List<String> _chapters = [
-    '1- Introduction à Flutter & Mobile',
-    '2- Installation du SDK & Configuration',
-    '3- Les bases du langage Dart',
-    '4- Concepts de Programmation Orientée Objet',
-    '5- Premier pas avec les Widgets de base',
-    '6- Création de Layouts complexes',
-    '7- Gestion des États (State Management)',
-    '8- Navigation et Routage entre écrans',
-    '9- Connexion aux APIs et services Web',
-    '10- Stockage de données locales (SQFlite)',
-    '11- Intégration de Firebase (Auth & Firestore)',
-    '12- Déploiement sur Play Store & App Store'
-  ];
+  List<ChapitreModel> _chapters = [];
 
   @override
   void dispose() {
@@ -54,7 +50,40 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
   }
 
   bool get _isQuizUnlocked {
-    return _completedChapters.length == _chapters.length;
+    return _completedChapters.length == _chapters.length && _chapters.isNotEmpty;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChapters();
+    _checkEnrollmentStatus();
+  }
+
+  Future<void> _checkEnrollmentStatus() async {
+    final authProvider = context.read<app_auth.AuthProvider>();
+    final user = authProvider.user;
+    if (user == null) return;
+
+    final hasEnrollment = await _courseService.hasEnrollment(userId: user.uid, courseId: widget.course.id);
+
+    if (!mounted) return;
+    setState(() {
+      _hasAccess = hasEnrollment;
+    });
+  }
+
+  Future<void> _loadChapters() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('cours')
+        .doc(widget.course.id)
+        .collection('chapitres')
+        .orderBy('ordre')
+        .get();
+
+    setState(() {
+      _chapters = snapshot.docs.map((doc) => ChapitreModel.fromDoc(doc)).toList();
+    });
   }
 
   void _scrollToChapters() {
@@ -65,7 +94,45 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     );
   }
 
+  Future<void> _registerToCourse(BuildContext? snackBarContext) async {
+    final authProvider = context.read<app_auth.AuthProvider>();
+    final user = authProvider.user;
+    if (user == null) {
+      if (snackBarContext != null && snackBarContext.mounted) {
+        ScaffoldMessenger.of(snackBarContext).showSnackBar(const SnackBar(content: Text('Connectez-vous pour vous inscrire.')));
+      }
+      return;
+    }
+
+    setState(() => _isLoadingEnrollment = true);
+    try {
+      await _courseService.enrollStudent(userId: user.uid, courseId: widget.course.id);
+
+      final refreshedEnrollment = await _courseService.hasEnrollment(userId: user.uid, courseId: widget.course.id);
+
+      if (!mounted) return;
+      setState(() {
+        _hasAccess = refreshedEnrollment;
+        _isLoadingEnrollment = false;
+      });
+      if (snackBarContext != null && snackBarContext.mounted) {
+        ScaffoldMessenger.of(snackBarContext).showSnackBar(
+          SnackBar(
+            content: Text(refreshedEnrollment ? 'Inscription réussie.' : 'L’inscription a été enregistrée localement, mais la confirmation n’a pas encore été retrouvée.'),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoadingEnrollment = false);
+      if (snackBarContext != null && snackBarContext.mounted) {
+        ScaffoldMessenger.of(snackBarContext).showSnackBar(SnackBar(content: Text('Erreur d’inscription : $e')));
+      }
+    }
+  }
+
   void _showRegistrationSheet(BuildContext context) {
+    final screenContext = context;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -156,12 +223,10 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (_formKey.currentState!.validate()) {
-                          Navigator.pop(context);
-                          setState(() {
-                            _hasAccess = true;
-                          });
+                          Navigator.pop(bc);
+                          await _registerToCourse(screenContext);
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -206,8 +271,8 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 gradient: const LinearGradient(colors: [Color(0xFF0D47A1), Color(0xFF1976D2)]),
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Center(
-                child: Text('Flutter & Dart', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+              child: Center(
+                child: Text(widget.course.titre, style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
               ),
             ),
             const SizedBox(height: 15),
@@ -219,9 +284,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                 children: [
                   const Icon(Icons.person, color: Color(0xFF0D47A1), size: 18),
                   const SizedBox(width: 6),
-                  const Text(
-                    'Prof. Jean Claude',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
+                  Text(
+                    widget.course.categorie,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.black87),
                   ),
                   const SizedBox(width: 15),
                   const Icon(Icons.star, color: Colors.amber, size: 18),
@@ -234,7 +299,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   Icon(Icons.people_alt_outlined, color: Colors.grey[600], size: 18),
                   const SizedBox(width: 6),
                   Text(
-                    '120 élèves',
+                    '${widget.course.inscritCount} inscrits',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey[700]),
                   ),
                 ],
@@ -246,7 +311,9 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Apprenez à créer des applications mobiles modernes avec ${widget.courseTitle} de A à Z.',
+                widget.course.description.isNotEmpty
+                    ? widget.course.description
+                    : 'Apprenez à créer des applications mobiles modernes avec ${widget.course.titre} de A à Z.',
                 style: TextStyle(color: Colors.grey[700], fontSize: 14),
               ),
             ),
@@ -271,15 +338,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                         _showRegistrationSheet(context);
                       } else if (!_isQuizUnlocked) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('⚠️ Terminez d\'abord les 12 chapitres pour débloquer le Quiz !'),
+                          SnackBar(
+                            content: Text('⚠️ Terminez d\'abord les ${_chapters.length} chapitres pour débloquer le Quiz !'),
                             backgroundColor: Colors.orange,
                           ),
                         );
                       } else {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => CourseQuizScreen(courseTitle: widget.courseTitle)),
+                          MaterialPageRoute(builder: (context) => CourseQuizScreen(courseTitle: widget.course.titre)),
                         );
                       }
                     },
@@ -302,13 +369,15 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: ElevatedButton(
-                onPressed: _hasAccess ? null : () => _showRegistrationSheet(context),
+                onPressed: _hasAccess || _isLoadingEnrollment ? null : () => _showRegistrationSheet(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _hasAccess ? Colors.grey : const Color(0xFF00C853),
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: Text(_hasAccess ? 'Déjà inscrit au cours' : 'S\'inscrire au cours', style: const TextStyle(color: Colors.white)),
+                child: _isLoadingEnrollment
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : Text(_hasAccess ? 'Déjà inscrit au cours' : 'S\'inscrire au cours', style: const TextStyle(color: Colors.white)),
               ),
             ),
             const SizedBox(height: 25),
@@ -334,68 +403,76 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             const SizedBox(height: 10),
 
             // Lis 12 Chapit yo
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _chapters.length,
-              itemBuilder: (context, index) {
-                final isCompleted = _completedChapters.contains(index);
-                return GestureDetector(
-                  onTap: () async {
-                    if (_hasAccess) {
-                      // Nou retounen ak paramèt orijinal yo pou CourseLectureScreen
-                      final result = await Navigator.push<bool>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CourseLectureScreen(
-                            chapterTitle: _chapters[index],
-                            chapterNumero: index + 1,
-                          ),
-                        ),
-                      );
-
-                      if (result == true) {
-                        setState(() {
-                          _completedChapters.add(index);
-                        });
-                      }
-                    } else {
-                      _showRegistrationSheet(context);
-                    }
-                  },
-                  child: Opacity(
-                    opacity: _hasAccess ? 1.0 : 0.5,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: isCompleted ? Colors.green : Colors.grey.shade200, 
-                          width: isCompleted ? 2 : 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            isCompleted ? Icons.check_circle : (_hasAccess ? Icons.play_circle_fill : Icons.lock),
-                            color: isCompleted ? Colors.green : (_hasAccess ? const Color(0xFF0D47A1) : Colors.grey),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _chapters[index],
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            if (_chapters.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Text('Aucun chapitre publié pour ce cours pour le moment.'),
+              )
+            else
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _chapters.length,
+                itemBuilder: (context, index) {
+                  final chapter = _chapters[index];
+                  final isCompleted = _completedChapters.contains(index);
+                  return GestureDetector(
+                    onTap: () async {
+                      if (_hasAccess) {
+                        final result = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CourseLectureScreen(
+                              chapterTitle: chapter.titre,
+                              chapterNumero: index + 1,
+                              chapterContent: chapter.contenu,
+                              chapterMedia: chapter.media,
                             ),
                           ),
-                        ],
+                        );
+
+                        if (result == true) {
+                          setState(() {
+                            _completedChapters.add(index);
+                          });
+                        }
+                      } else {
+                        _showRegistrationSheet(context);
+                      }
+                    },
+                    child: Opacity(
+                      opacity: _hasAccess ? 1.0 : 0.5,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isCompleted ? Colors.green : Colors.grey.shade200,
+                            width: isCompleted ? 2 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isCompleted ? Icons.check_circle : (_hasAccess ? Icons.play_circle_fill : Icons.lock),
+                              color: isCompleted ? Colors.green : (_hasAccess ? const Color(0xFF0D47A1) : Colors.grey),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                chapter.titre,
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
             const SizedBox(height: 30),
           ],
         ),
@@ -417,7 +494,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
