@@ -42,6 +42,7 @@ class AuthService {
       await _firestore.collection('users').doc(user.uid).set({
         'role': role,
         'nom': nom,
+        'email': email,
         'avatarURL': '',
         'institution': institution,
         'createdAt': Timestamp.now(),
@@ -125,6 +126,68 @@ class AuthService {
     }
   }
 
+  Future<void> updateUserProfile({
+    required String nom,
+    String? email,
+    String? institution,
+    String? avatarURL,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('Aucun utilisateur connecté.');
+    }
+
+    try {
+      final trimmedNom = nom.trim();
+      final trimmedEmail = email?.trim();
+      final trimmedInstitution = institution?.trim();
+      final trimmedAvatarURL = avatarURL?.trim();
+
+      if (trimmedEmail != null && trimmedEmail.isNotEmpty && trimmedEmail != user.email) {
+        await user.verifyBeforeUpdateEmail(trimmedEmail);
+      }
+
+      await user.updateDisplayName(trimmedNom);
+
+      final data = <String, dynamic>{
+        'nom': trimmedNom,
+        'email': trimmedEmail ?? user.email ?? '',
+      };
+
+      if (trimmedInstitution != null && trimmedInstitution.isNotEmpty) {
+        data['institution'] = trimmedInstitution;
+      }
+      if (trimmedAvatarURL != null && trimmedAvatarURL.isNotEmpty) {
+        data['avatarURL'] = trimmedAvatarURL;
+      }
+
+      await _firestore.collection('users').doc(user.uid).set(data, SetOptions(merge: true));
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthError(e);
+    }
+  }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null || user.email == null) {
+      throw Exception('Aucun utilisateur connecté.');
+    }
+
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: user.email!,
+        password: currentPassword,
+      );
+      await user.reauthenticateWithCredential(credential);
+      await user.updatePassword(newPassword);
+    } on FirebaseAuthException catch (e) {
+      throw _handleAuthError(e);
+    }
+  }
+
   Future<void> _createUserIfMissing(User user) async {
     final userDoc = _firestore.collection('users').doc(user.uid);
     final snapshot = await userDoc.get();
@@ -132,6 +195,7 @@ class AuthService {
       await userDoc.set({
         'role': 'student',
         'nom': user.displayName ?? user.email?.split('@').first ?? 'Utilisateur',
+        'email': user.email ?? '',
         'avatarURL': user.photoURL ?? '',
         'institution': '',
         'createdAt': Timestamp.now(),
@@ -159,6 +223,12 @@ class AuthService {
     final doc = await _firestore.collection('users').doc(uid).get();
     if (!doc.exists) return null;
     return doc.data()?['nom'] as String?;
+  }
+
+  Future<String?> getUserAvatar(String uid) async {
+    final doc = await _firestore.collection('users').doc(uid).get();
+    if (!doc.exists) return null;
+    return doc.data()?['avatarURL'] as String?;
   }
 
   // ----------------------------------------------------------

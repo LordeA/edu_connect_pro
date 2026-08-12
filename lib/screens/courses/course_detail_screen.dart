@@ -1,33 +1,66 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'course_lecture_screen.dart';
 import 'course_quiz_screen.dart';
 import '../auth/login_screen.dart'; // Asire w chemen sa a kòrèk pou retounen sou Login
 
 class CourseDetailScreen extends StatefulWidget {
+  final String courseId;
   final String courseTitle;
 
-  const CourseDetailScreen({super.key, required this.courseTitle});
+  const CourseDetailScreen({super.key, required this.courseId, required this.courseTitle});
 
   @override
   State<CourseDetailScreen> createState() => _CourseDetailScreenState();
 }
 
 class _CourseDetailScreenState extends State<CourseDetailScreen> {
-  // Aksè a louvri tout tan pa defo
-  final bool _hasAccess = true;
-  
-  // Swiv 12 chapit yo lè yo konplete
-  final Set<int> _completedChapters = {}; 
-
+  final Set<int> _completedChapters = {};
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _chaptersSectionKey = GlobalKey();
 
-  late final List<String> _chapters;
+  List<String> _chapters = [];
+  List<Map<String, dynamic>> _questions = [];
+  String _description = '';
 
   @override
   void initState() {
     super.initState();
-    _chapters = _buildChaptersForCourse(widget.courseTitle);
+    _loadCourseData();
+  }
+
+  Future<void> _loadCourseData() async {
+    final courseDoc = await FirebaseFirestore.instance.collection('cours').doc(widget.courseId).get();
+    if (!courseDoc.exists) {
+      if (mounted) {
+        setState(() {
+          _chapters = [];
+          _questions = [];
+          _description = 'Aucune description disponible.';
+        });
+      }
+      return;
+    }
+
+    final data = courseDoc.data() ?? {};
+    final chaptersSnapshot = await FirebaseFirestore.instance
+        .collection('cours')
+        .doc(widget.courseId)
+        .collection('chapitres')
+        .orderBy('ordre')
+        .get();
+    final questionsSnapshot = await FirebaseFirestore.instance
+        .collection('questions')
+        .where('courseId', isEqualTo: widget.courseId)
+        .get();
+
+    if (mounted) {
+      setState(() {
+        _chapters = chaptersSnapshot.docs.map((doc) => doc.data()['titre']?.toString() ?? 'Chapitre').toList();
+        _questions = questionsSnapshot.docs.map((doc) => doc.data()).toList();
+        _description = data['description']?.toString() ?? 'Aucune description disponible.';
+      });
+    }
   }
 
   @override
@@ -36,75 +69,6 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
     super.dispose();
   }
 
-  // Quiz la toujou debloque kounye a paske yo gen aksè dirèk
-  bool get _isQuizUnlocked {
-    return true;
-  }
-
-  List<String> _buildChaptersForCourse(String courseTitle) {
-    switch (courseTitle) {
-      case 'Flutter & Dart':
-        return [
-          '1- Introduction à Flutter & mobile',
-          '2- Installation du SDK & configuration',
-          '3- Bases du langage Dart',
-          '4- Widgets et composition UI',
-          '5- Gestion des états et Provider',
-          '6- Navigation et routage',
-          '7- Connexion aux APIs REST',
-          '8- Stockage local et Firestore',
-          '9- Authentification Firebase',
-          '10- Publication sur Android & iOS',
-        ];
-      case 'UI/UX Design':
-        return [
-          '1- Principes du design centré utilisateur',
-          '2- Grilles et typographie',
-          '3- Couleurs et contrastes',
-          '4- Design d’interfaces mobiles',
-          '5- Prototypage et wireframes',
-          '6- Tests utilisateur et retours',
-          '7- Accessibilité et ergonomie',
-          '8- Animation et micro-interactions',
-          '9- Brand design et identité visuelle',
-          '10- Présentation de portfolio design',
-        ];
-      case 'Marketing Digital':
-        return [
-          '1- Fondamentaux du marketing digital',
-          '2- SEO et contenu optimisé',
-          '3- Publicité sur les réseaux sociaux',
-          '4- Email marketing efficace',
-          '5- Analytics et suivi de performance',
-          '6- Brand awareness et storytelling',
-          '7- Conversion et tunnel de vente',
-          '8- Community management',
-          '9- Marketing automation',
-          '10- Campagnes à budget limité',
-        ];
-      case 'Gestion de Projet':
-        return [
-          '1- Introduction à la gestion de projet',
-          '2- Méthodes Agile et Scrum',
-          '3- Planification et jalons',
-          '4- Gestion des risques',
-          '5- Communication d’équipe',
-          '6- Suivi de l’avancement',
-          '7- Gestion du budget',
-          '8- Livrables et qualité',
-          '9- Leadership et motivation',
-          '10- Clôture de projet et bilan',
-        ];
-      default:
-        return [
-          '1- Introduction générale',
-          '2- Concepts clés',
-          '3- Approfondissement',
-          '4- Études de cas',
-          '5- Résumé et prochaines étapes',
-        ];
-    }
-  }
 
   void _scrollToChapters() {
     Scrollable.ensureVisible(
@@ -253,7 +217,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Apprenez à créer des applications mobiles modernes avec ${widget.courseTitle} de A à Z.',
+                _description.isNotEmpty ? _description : 'Aucune description disponible pour ce cours.',
                 style: TextStyle(color: Colors.grey[700], fontSize: 14),
               ),
             ),
@@ -276,13 +240,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => CourseQuizScreen(courseTitle: widget.courseTitle)),
+                        MaterialPageRoute(builder: (context) => CourseQuizScreen(courseId: widget.courseId, courseTitle: widget.courseTitle)),
                       );
                     },
                     child: _buildDetailInfo(
-                      '8', 
-                      'Quiz', 
-                      isActive: true, 
+                      _questions.length.toString(),
+                      'Quiz',
+                      isActive: true,
                       isLocked: false,
                     ),
                   ),
@@ -305,7 +269,7 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                   Text(
                     'Progression: ${_completedChapters.length}/${_chapters.length}',
                     style: const TextStyle(
-                      color: Colors.green, 
+                      color: Colors.green,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -314,8 +278,13 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
             ),
             const SizedBox(height: 10),
 
-            // Lis 12 Chapit yo
-            ListView.builder(
+            if (_chapters.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Text('Aucun chapitre ajouté pour ce cours pour le moment.'),
+              )
+            else
+              ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _chapters.length,
@@ -342,39 +311,39 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                       });
                     }
                   },
-                  child: Opacity(
-                    opacity: 1.0,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: isCompleted ? Colors.green : Colors.grey.shade200, 
-                          width: isCompleted ? 2 : 1,
+                    child: Opacity(
+                      opacity: 1.0,
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: isCompleted ? Colors.green : Colors.grey.shade200,
+                            width: isCompleted ? 2 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isCompleted ? Icons.check_circle : Icons.play_circle_fill,
+                              color: isCompleted ? Colors.green : const Color(0xFF0D47A1),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _chapters[index],
+                                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            isCompleted ? Icons.check_circle : Icons.play_circle_fill,
-                            color: isCompleted ? Colors.green : const Color(0xFF0D47A1),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              _chapters[index],
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
             const SizedBox(height: 30),
           ],
         ),

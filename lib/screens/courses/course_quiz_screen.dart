@@ -1,106 +1,197 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:edu_connect_pro/screens/quiz/quiz_result_screen.dart'; // Enpòtasyon paj rezilta a pou liyaj la ka fèt
-import '../auth/login_screen.dart'; // Asire w chemen sa a kòrèk pou retounen sou Login
+import 'package:edu_connect_pro/screens/quiz/quiz_result_screen.dart';
+import '../auth/login_screen.dart';
 
 class CourseQuizScreen extends StatefulWidget {
+  final String courseId;
   final String courseTitle;
 
-  const CourseQuizScreen({super.key, required this.courseTitle});
+  const CourseQuizScreen({super.key, required this.courseId, required this.courseTitle});
 
   @override
   State<CourseQuizScreen> createState() => _CourseQuizScreenState();
 }
 
 class _CourseQuizScreenState extends State<CourseQuizScreen> {
-  int _currentQuestionIndex = 0; // Kòmanse nan 0 (premye kesyon)
-  int _score = 0; // Pou kalkile repons ki kòrèk yo
-  int? _selectedAnswerIndex; // Pou konnen kisa itilizatè a chwazi nan kesyon sa a
+  int _currentQuestionIndex = 0;
+  int _score = 0;
+  int? _selectedAnswerIndex;
+  List<Map<String, dynamic>> _questions = [];
+  bool _isLoading = true;
 
-  // Lis 8 kesyon ak opsyon yo, plis endèks repons ki kòrèk la (correctIndex)
-  final List<Map<String, dynamic>> _questions = [
-    {
-      "question": "Quelle est la fonction principale de Flutter?",
-      "options": [
-        "Créer des sites web uniquement",
-        "Créer des applications mobiles natives multiplateformes",
-        "Gérer des bases de données",
-        "Compiler du code Python"
-      ],
-      "correctIndex": 1 // B
-    },
-    {
-      "question": "Quel langage de programmation utilise Flutter?",
-      "options": [
-        "Java",
-        "Swift",
-        "Dart",
-        "Kotlin"
-      ],
-      "correctIndex": 2 // C
-    },
-    {
-      "question": "Qui a développé Flutter?",
-      "options": [
-        "Apple",
-        "Google",
-        "Microsoft",
-        "Facebook"
-      ],
-      "correctIndex": 1 // B
-    },
-    {
-      "question": "Quel composant est la base de toute l'UI dans Flutter?",
-      "options": [
-        "Widget",
-        "Activity",
-        "ViewController",
-        "Element"
-      ],
-      "correctIndex": 0 // A
-    },
-    {
-      "question": "Quelle commande permet de créer un nouveau projet Flutter?",
-      "options": [
-        "flutter start project",
-        "flutter create mon_projet",
-        "flutter new project",
-        "flutter init"
-      ],
-      "correctIndex": 1 // B
-    },
-    {
-      "question": "Quel widget est utilisé pour créer un champ de saisie de texte?",
-      "options": [
-        "Text",
-        "TextField",
-        "InputText",
-        "TextFormFieldOnly"
-      ],
-      "correctIndex": 1 // B
-    },
-    {
-      "question": "Comment rafraîchir l'interface graphique d'un StatefulWidget?",
-      "options": [
-        "setState()",
-        "refresh()",
-        "updateUI()",
-        "reload()"
-      ],
-      "correctIndex": 0 // A
-    },
-    {
-      "question": "Où configure-t-on les dépendances et packages dans Flutter?",
-      "options": [
-        "AndroidManifest.xml",
-        "main.dart",
-        "pubspec.yaml",
-        "build.gradle"
-      ],
-      "correctIndex": 2 // C
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadQuestions();
+  }
 
-  // Fonksyon konfimasyon dekoneksyon an
+  Future<void> _loadQuestions() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('questions')
+          .where('courseId', isEqualTo: widget.courseId)
+          .get();
+
+      if (mounted) {
+        setState(() {
+          _questions = snapshot.docs.map((doc) => doc.data()).toList();
+          // Fallback to hardcoded questions if Firestore is empty
+          if (_questions.isEmpty) {
+            _questions = _buildFallbackQuestions(widget.courseTitle);
+          }
+          _currentQuestionIndex = 0;
+          _score = 0;
+          _selectedAnswerIndex = null;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        // On error, use fallback questions
+        setState(() {
+          _questions = _buildFallbackQuestions(widget.courseTitle);
+          _currentQuestionIndex = 0;
+          _score = 0;
+          _selectedAnswerIndex = null;
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  List<Map<String, dynamic>> _buildFallbackQuestions(String courseTitle) {
+    switch (courseTitle) {
+      case 'Flutter & Dart':
+        return [
+          {
+            "question": "Quelle est la fonction principale de Flutter?",
+            "options": [
+              "Créer des sites web uniquement",
+              "Créer des applications mobiles natives multiplateformes",
+              "Gérer des bases de données",
+              "Compiler du code Python"
+            ],
+            "correctIndex": 1
+          },
+          {
+            "question": "Quel langage de programmation utilise Flutter?",
+            "options": ["Java", "Swift", "Dart", "Kotlin"],
+            "correctIndex": 2
+          },
+          {
+            "question": "Qui a développé Flutter?",
+            "options": ["Apple", "Google", "Microsoft", "Facebook"],
+            "correctIndex": 1
+          },
+          {
+            "question": "Quel composant est la base de toute l'UI dans Flutter?",
+            "options": ["Widget", "Activity", "ViewController", "Element"],
+            "correctIndex": 0
+          },
+          {
+            "question": "Quelle commande permet de créer un nouveau projet Flutter?",
+            "options": [
+              "flutter start project",
+              "flutter create mon_projet",
+              "flutter new project",
+              "flutter init"
+            ],
+            "correctIndex": 1
+          },
+        ];
+      case 'Marketing Digital':
+        return [
+          {
+            "question": "Quelle est l'objectif principal du marketing digital?",
+            "options": [
+              "Vendre uniquement en magasin",
+              "Promouvoir un produit ou service via des canaux numériques ciblés",
+              "Créer uniquement des brochures papier",
+              "Remplacer tous les réseaux sociaux"
+            ],
+            "correctIndex": 1
+          },
+          {
+            "question": "Que permet le marketing numérique de mesurer facilement?",
+            "options": [
+              "La satisfaction des clients uniquement",
+              "Les performances et résultats en temps réel",
+              "Rien du tout",
+              "Seulement les ventes en magasin"
+            ],
+            "correctIndex": 1
+          },
+          {
+            "question": "Quel canal est souvent utilisé pour le marketing par email?",
+            "options": [
+              "La radio uniquement",
+              "Les campagnes email ciblées",
+              "Les appels téléphoniques manuels",
+              "Les affiches de rue seulement"
+            ],
+            "correctIndex": 1
+          },
+          {
+            "question": "Que signifie le community management?",
+            "options": [
+              "Créer des pages web sans contenu",
+              "Animer et entretenir une relation avec les abonnés",
+              "Prendre des photos de produits uniquement",
+              "Supprimer les commentaires clients"
+            ],
+            "correctIndex": 1
+          },
+          {
+            "question": "Quel est l'avantage du marketing automation?",
+            "options": [
+              "Il automatise les messages au bon moment et réduit les tâches répétitives",
+              "Il remplace complètement le marketing humain",
+              "Il n'a aucun effet sur les conversions",
+              "Il arrête les campagnes sociales"
+            ],
+            "correctIndex": 0
+          },
+        ];
+      case 'UI/UX Design':
+        return [
+          {
+            "question": "Quel est l'objectif principal du design centré utilisateur?",
+            "options": [
+              "Maximiser le nombre de lignes de code",
+              "Comprendre les besoins et comportements de l'utilisateur",
+              "Remplacer entièrement le marketing",
+              "Supprimer la navigation dans l'application"
+            ],
+            "correctIndex": 1
+          },
+          {
+            "question": "Pourquoi les grilles de mise en page sont-elles utiles?",
+            "options": [
+              "Elles rendent le design plus lent",
+              "Elles structurent l'information et l'alignement visuel",
+              "Elles remplacent le contenu textuel",
+              "Elles empêchent toute adaptation mobile"
+            ],
+            "correctIndex": 1
+          },
+        ];
+      default:
+        return [
+          {
+            "question": "Quelle est la finalité principale de ce cours?",
+            "options": [
+              "Apprendre et appliquer les concepts du module",
+              "Ignorer les objectifs du cours",
+              "Supprimer toutes les activités",
+              "Rendre le cours inaccessible"
+            ],
+            "correctIndex": 0
+          },
+        ];
+    }
+  }
+
   void showLogoutConfirmation(BuildContext context) {
     showDialog(
       context: context,
@@ -140,6 +231,50 @@ class _CourseQuizScreenState extends State<CourseQuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text('Quiz - ${widget.courseTitle}', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          centerTitle: true,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_questions.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: Text('Quiz - ${widget.courseTitle}', style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text('Aucun quiz disponible pour ce cours.', style: TextStyle(color: Colors.grey[700], fontSize: 16)),
+          ),
+        ),
+      );
+    }
+
+    // Safety check: ensure _currentQuestionIndex is valid
+    if (_currentQuestionIndex < 0 || _currentQuestionIndex >= _questions.length) {
+      _currentQuestionIndex = 0;
+    }
+
     final currentQuestion = _questions[_currentQuestionIndex];
     final bool isLastQuestion = _currentQuestionIndex == _questions.length - 1;
 
@@ -198,7 +333,7 @@ class _CourseQuizScreenState extends State<CourseQuizScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: FractionallySizedBox(
-                  widthFactor: (_currentQuestionIndex + 1) / _questions.length,
+                  widthFactor: _questions.isEmpty ? 0.0 : (_currentQuestionIndex + 1) / _questions.length,
                   child: Container(
                     color: Colors.black,
                   ),

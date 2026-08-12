@@ -1,3 +1,8 @@
+// ============================================================
+// EduConnect Pro — AppRouter (Standard Navigator)
+// Membre A
+// ============================================================
+
 import 'package:flutter/material.dart';
 import 'screens/auth/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -18,21 +23,30 @@ class AppRouter {
     switch (settings.name) {
       case splash:
         return MaterialPageRoute(builder: (_) => const SplashScreen());
+        
       case login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
+        
       case register:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
+        
       case teacherDashboard:
         return MaterialPageRoute(builder: (_) => const TeacherDashboard());
+        
       case studentDashboard:
         final userId = settings.arguments as String? ?? 'unknown';
         return MaterialPageRoute(builder: (_) => StudentDashboard(userId: userId));
+        
       case progression:
         return MaterialPageRoute(builder: (_) => const BadgesScreen());
+        
       default:
         return MaterialPageRoute(
           builder: (_) => Scaffold(
-            body: Center(child: Text('Route non trouvée : ${settings.name}')),
+            appBar: AppBar(title: const Text('Erè Navigasyon')),
+            body: Center(
+              child: Text('Route non trouvée : ${settings.name}'),
+            ),
           ),
         );
     }

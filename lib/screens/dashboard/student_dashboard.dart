@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_connect_pro/providers/auth_provider.dart';
 import 'package:edu_connect_pro/screens/courses/course_catalog_screen.dart';
-import 'package:edu_connect_pro/screens/courses/course_detail_screen.dart';
 import 'package:edu_connect_pro/screens/forum/forum_screen.dart';
 import 'package:edu_connect_pro/screens/notifications/notifications_screen.dart';
 import 'package:edu_connect_pro/screens/badges_list_screen.dart';
 import 'package:edu_connect_pro/screens/profile_screen.dart';
 import '../auth/login_screen.dart'; // Enpòtasyon pou ekran Login nan lè yo dekonekte
+import '../quiz/quiz_screen.dart'; // Enpòtasyon pou ekran Quiz la
 
 class StudentDashboard extends StatefulWidget {
-  final String userId; // Nou bezwen ID a jan nou te diskite anvan an
+  final String userId;
   const StudentDashboard({super.key, required this.userId});
 
   @override
@@ -24,6 +24,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
     const AccueilBody(), 
     const CourseCatalogScreen(),
     ForumScreen(),
+    const QuizScreen(), // Paj Quiz la ki ajoute nan lis la
     const NotificationScreen(),
     const ProfileScreen(),  
   ];
@@ -47,6 +48,7 @@ class _StudentDashboardState extends State<StudentDashboard> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
           BottomNavigationBarItem(icon: Icon(Icons.book), label: 'Cours'),
           BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'Forum'),
+          BottomNavigationBarItem(icon: Icon(Icons.quiz), label: 'Quiz'), // Item Quiz la ki ajoute nan meni anba a
           BottomNavigationBarItem(icon: Icon(Icons.notifications), label: 'Notification'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
         ],
@@ -58,7 +60,6 @@ class _StudentDashboardState extends State<StudentDashboard> {
 class AccueilBody extends StatelessWidget {
   const AccueilBody({super.key});
 
-  // Fonksyon konfimasyon dekoneksyon an
   void showLogoutConfirmation(BuildContext context) {
     showDialog(
       context: context,
@@ -104,7 +105,6 @@ class AccueilBody extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Entête: Bonjour, Jean Berlineda ak foto pwofil gòch / notifikasyon & Dekoneksyon dwat
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -132,7 +132,6 @@ class AccueilBody extends StatelessWidget {
                   children: [
                     const Icon(Icons.notifications_none, size: 26),
                     const SizedBox(width: 8),
-                    // Bouton dekoneksyon an ak yon bèl ti icon wouj
                     IconButton(
                       icon: const Icon(Icons.logout, color: Colors.red, size: 24),
                       onPressed: () => showLogoutConfirmation(context),
@@ -143,8 +142,6 @@ class AccueilBody extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 20),
-
-            // 2. Kat Progression Globale: "Progression globale" anlè, epi ti wonn nan bò gòch "Continue comme ça !"
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -189,8 +186,6 @@ class AccueilBody extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 25),
-
-            // 3. Seksyon Mes cours
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -207,7 +202,6 @@ class AccueilBody extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            
             _buildCourseItem(
               context,
               'Flutter & Dart',
@@ -229,8 +223,6 @@ class AccueilBody extends StatelessWidget {
               'Chapitre 2: Couleurs et typographie',
             ),
             const SizedBox(height: 20),
-
-            // 4. Seksyon Badges obtenus
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -283,7 +275,7 @@ class AccueilBody extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => CourseDetailScreen(courseTitle: title)),
+          MaterialPageRoute(builder: (context) => const CourseCatalogScreen()),
         );
       },
       child: Container(

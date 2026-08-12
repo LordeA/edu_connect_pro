@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class ModifierProfilScreen extends StatefulWidget {
@@ -130,6 +131,7 @@ class _ModifierProfilScreenState extends State<ModifierProfilScreen> {
               TextFormField(
                 controller: _nomController,
                 decoration: _buildInputDecoration('Nom Complet', isDark),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[a-zA-ZÀ-ÖØ-öø-ÿ\s'-]"))],
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Silvouplè, antre non ou';
@@ -161,6 +163,7 @@ class _ModifierProfilScreenState extends State<ModifierProfilScreen> {
               TextFormField(
                 controller: _telController,
                 keyboardType: TextInputType.phone,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: _buildInputDecoration('Téléphone', isDark),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {

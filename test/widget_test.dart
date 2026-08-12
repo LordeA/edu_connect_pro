@@ -8,23 +8,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:edu_connect_pro/main.dart';
+import 'package:edu_connect_pro/screens/courses/course_quiz_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Marketing Digital quiz uses marketing-related questions', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: CourseQuizScreen(courseId: 'test_course_id', courseTitle: 'Marketing Digital'),
+      ),
+    );
+    await tester.pumpAndSettle();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.textContaining('marketing', findRichText: true), findsWidgets);
+    expect(find.text('Quelle est la fonction principale de Flutter?'), findsNothing);
   });
 }

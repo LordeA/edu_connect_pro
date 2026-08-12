@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:edu_connect_pro/providers/theme_provider.dart';// Asire w chemen sa a bon pou ThemeProvider
-import 'package:edu_connect_pro/screens/privacy_screen.dart';
 
 // ==========================================
 // 1. EKRAN PWOFIL PRENSIPAL LA
@@ -212,12 +212,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     try {
       if (_user != null) {
-        if (_nameController.text.trim() != _user!.displayName) {
-          await _user!.updateDisplayName(_nameController.text.trim());
+        if (_nameController.text.trim() != _user.displayName) {
+          await _user.updateDisplayName(_nameController.text.trim());
         }
 
-        if (_emailController.text.trim() != _user!.email) {
-          await _user!.verifyBeforeUpdateEmail(_emailController.text.trim());
+        if (_emailController.text.trim() != _user.email) {
+          await _user.verifyBeforeUpdateEmail(_emailController.text.trim());
         }
 
         // Si vous utilisez la mise à jour du numéro de téléphone via Firebase Auth, ajoutez ici la logique.
@@ -265,6 +265,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Nom complet', border: OutlineInputBorder()),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[a-zA-ZÀ-ÖØ-öø-ÿ\s'-]"))],
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'Ce champ est obligatoire.';
@@ -281,7 +282,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   if (value == null || value.trim().isEmpty) {
                     return 'Ce champ est obligatoire.';
                   }
-                  final emailRegex = RegExp(r'^[\w-.]+@([\w-]+\.)+[a-zA-Z]{2,}\$');
+                  final emailRegex = RegExp(r'^[\w.-]+@([\w-]+\.)+[a-zA-Z]{2,}$');
                   if (!emailRegex.hasMatch(value.trim())) {
                     return 'Veuillez entrer un email valide.';
                   }
@@ -292,6 +293,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: const InputDecoration(labelText: 'Téléphone', border: OutlineInputBorder()),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {

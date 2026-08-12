@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 import 'forum_details_screen.dart';
-import '../courses/course_catalog_screen.dart';
-import '../notifications/notifications_screen.dart';
-import '../profile_screen.dart';
-import '../dashboard/student_dashboard.dart';
 
 class ForumScreen extends StatefulWidget {
   const ForumScreen({super.key});
@@ -14,7 +10,6 @@ class ForumScreen extends StatefulWidget {
 
 class _ForumScreenState extends State<ForumScreen> {
   int _selectedTab = 0; // 0 pou Discussions, 1 pou Mes questions
-  final int _currentIndex = 2; // Forum se endis 2
 
   // Lis ki gen tout diskisyon yo (Nou fè l vin dinamik ak State)
   final List<Map<String, dynamic>> _discussions = [
@@ -37,33 +32,6 @@ class _ForumScreenState extends State<ForumScreen> {
       'avatarColor': Colors.deepPurple,
     },
   ];
-
-  // Fonksyon pou jere navigasyon ba anba a
-  void _onItemTapped(int index) {
-    if (index == _currentIndex) return;
-
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const StudentDashboard(userId: 'VALÈ_ID_LA')),
-      );
-    } else if (index == 1) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const CourseCatalogScreen()),
-      );
-    } else if (index == 3) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const NotificationScreen()),
-      );
-    } else if (index == 4) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ProfileScreen()),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

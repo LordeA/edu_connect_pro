@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:edu_connect_pro/app_router.dart';
 import 'package:edu_connect_pro/providers/auth_provider.dart';
@@ -23,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _nomController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _institutionController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
@@ -32,6 +34,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _nomController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
+    _institutionController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -65,7 +68,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       password: _passwordController.text.trim(),
       nom: '${_prenomController.text.trim()} ${_nomController.text.trim()}',
       role: _selectedRole == 'Enseignant' ? 'teacher' : 'student',
-      institution: _phoneController.text.trim(),
+      institution: _institutionController.text.trim(),
     );
 
     if (!mounted) return;
@@ -141,6 +144,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         controller: _prenomController,
                         hintText: 'Prénom',
                         icon: Icons.person_outline,
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[a-zA-ZÀ-ÖØ-öø-ÿ\s'-]"))],
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -149,6 +153,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         controller: _nomController,
                         hintText: 'Nom',
                         icon: Icons.person_outline,
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[a-zA-ZÀ-ÖØ-öø-ÿ\s'-]"))],
                       ),
                     ),
                   ],
@@ -164,12 +169,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 15),
 
+                // Institution
+                _buildTextField(
+                  controller: _institutionController,
+                  hintText: 'Institution',
+                  icon: Icons.school_outlined,
+                  keyboardType: TextInputType.text,
+                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r"[a-zA-ZÀ-ÖØ-öø-ÿ\s'-]"))],
+                ),
+                const SizedBox(height: 15),
+
                 // Téléphone
                 _buildTextField(
                   controller: _phoneController,
                   hintText: 'Téléphone',
                   icon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 ),
                 const SizedBox(height: 15),
 
@@ -310,6 +326,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required String hintText,
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter> inputFormatters = const [],
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -326,6 +343,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
         decoration: InputDecoration(
           hintText: hintText,
           hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),

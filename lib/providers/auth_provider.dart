@@ -13,6 +13,7 @@ class AuthProvider extends ChangeNotifier {
   User? _user;
   String? _role; // 'teacher' | 'student'
   String? _nom;
+  String? _avatarURL;
   bool _isLoading = false;
   bool _rememberMe = false;
   bool _initialized = false;
@@ -21,7 +22,9 @@ class AuthProvider extends ChangeNotifier {
   // Getters publics
   User? get user => _user;
   String? get nom => _nom;
+  String? get avatarURL => _avatarURL;
   String? get role => _role;
+  String? get email => _user?.email; // <-- Getter anplis pou evite erè 'missing email getter'
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _user != null;
@@ -42,9 +45,11 @@ class AuthProvider extends ChangeNotifier {
       if (user != null) {
         _role = await _authService.getUserRole(user.uid);
         _nom = await _authService.getUserName(user.uid);
+        _avatarURL = await _authService.getUserAvatar(user.uid);
       } else {
         _role = null;
         _nom = null;
+        _avatarURL = null;
       }
       _initialized = true;
       notifyListeners();
@@ -98,6 +103,7 @@ class AuthProvider extends ChangeNotifier {
       if (user != null) {
         _role = await _authService.getUserRole(user.uid);
         _nom = await _authService.getUserName(user.uid);
+        _avatarURL = await _authService.getUserAvatar(user.uid);
       }
       _setLoading(false);
       return true;
@@ -168,6 +174,52 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile({
+    required String nom,
+    String? email,
+    String? institution,
+    String? avatarURL,
+  }) async {
+    _setLoading(true);
+    _errorMessage = null;
+    try {
+      await _authService.updateUserProfile(
+        nom: nom,
+        email: email,
+        institution: institution,
+        avatarURL: avatarURL,
+      );
+      _nom = nom;
+      notifyListeners();
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    _setLoading(true);
+    _errorMessage = null;
+    try {
+      await _authService.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _setLoading(false);
+      return false;
+    }
+  }
+
   // ----------------------------------------------------------
   // DÉCONNEXION
   // ----------------------------------------------------------
@@ -175,6 +227,9 @@ class AuthProvider extends ChangeNotifier {
     await _authService.logout();
     _user = null;
     _role = null;
+    _nom = null;
+    _avatarURL = null;
+    _errorMessage = null;
     notifyListeners();
   }
 
@@ -182,6 +237,7 @@ class AuthProvider extends ChangeNotifier {
     if (_user != null) {
       _role = await _authService.getUserRole(_user!.uid);
       _nom = await _authService.getUserName(_user!.uid);
+      _avatarURL = await _authService.getUserAvatar(_user!.uid);
       notifyListeners();
     }
   }
